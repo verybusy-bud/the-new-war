@@ -2,8 +2,11 @@
 <!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
                    "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
 <refentry id='vmsempire6'>
-<!--  See the file COPYING, distributed with empire, for restriction
- and warranty information. -->
+<!--
+SPDX-FileCopyrightText: Copyright (C) 1987, 1988 Chuck Simmons
+SPDX-License-Identifier: GPL-2.0+
+See the file COPYING, distributed with empire, for restriction
+and warranty information. -->
 
 <refmeta>
 <refentrytitle>Empire</refentrytitle>

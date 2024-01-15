@@ -1,5 +1,6 @@
 /*
- *    Copyright (C) 1987, 1988 Chuck Simmons
+ * SPDX-FileCopyrightText: Copyright (C) 1987, 1988 Chuck Simmons
+ * SPDX-License-Identifier: GPL-2.0+
  * 
  * See the file COPYING, distributed with empire, for restriction
  * and warranty information.

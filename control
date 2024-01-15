@@ -1,5 +1,7 @@
 # This is not a real Debian control file
 # It's project metadata for the shipper tool
+# SPDX-FileCopyrightText: Copyright (C) Eric S. Raymond <esr@thyrsus.com>
+# SPDX-License-Identifier: GPL-2.0+
 
 Package: vms-empire
 
