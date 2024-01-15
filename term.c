@@ -410,8 +410,10 @@ loc_disp(int loc)
     int col = loc % MAP_WIDTH;
     ASSERT (loc == (row * MAP_WIDTH) + col);
     int i;
+    // cppcheck-suppress zerodiv
     for (i = COL_DIGITS; i > 0; i--) {
-	nrow *= 10; }
+	nrow *= 10;
+    }
     move (LINES - 1, 0);
     return nrow + col;
 }

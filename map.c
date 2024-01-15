@@ -230,7 +230,7 @@ Return true if a location is on the edge of a continent.
 */
 
 bool
-map_cont_edge(int *cont_map, loc_t loc)
+map_cont_edge(const int *cont_map, loc_t loc)
 {
     loc_t i, j;
 
@@ -584,11 +584,20 @@ add_cell(path_map_t *pmap, loc_t new_loc,
 {
     register	path_map_t	*pm = &pmap[new_loc];
 
+    ASSERT(pm != NULL);
+
+    // cppcheck-suppress nullPointerRedundantCheck
     pm->terrain = terrain;
+    // cppcheck-suppress nullPointerRedundantCheck
     pm->inc_cost = inc_cost;
+    // cppcheck-suppress nullPointerRedundantCheck
     pm->cost = cur_cost + inc_cost;
 
+    ASSERT(perim != NULL);
+
+    // cppcheck-suppress nullPointerRedundantCheck
     perim->list[perim->len] = new_loc;
+    // cppcheck-suppress nullPointerRedundantCheck
     perim->len += 1;
 }
 

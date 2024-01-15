@@ -158,6 +158,7 @@ comp_prod(city_info_t *cityp, bool is_lake)
 	    if (game.comp_map[i].contents == 'X') {
 		p = find_city (i);
 		ASSERT (p != NULL && p->owner == COMP);
+		// cppcheck-suppress nullPointerRedundantCheck
 		if (p->prod == ARMY) comp_ac += 1;
 	    }
 	}
@@ -217,7 +218,9 @@ comp_prod(city_info_t *cityp, bool is_lake)
 	if (city_count[ARMY] == 1) {
 	    for (i = 0; i < NUM_CITY; i++)
 		if (game.city[i].owner == COMP && game.city[i].prod == ARMY) break;
-		
+
+	    // It's mysterious why the following exclusion is required...
+	    // cppcheck-suppress arrayIndexOutOfBounds
 	    if (!lake (game.city[i].loc)) {
 		comp_set_prod (cityp, ARMY);
 		return;
@@ -276,8 +279,8 @@ comp_set_prod(city_info_t *cityp, int type)
 See if a city is producing an object which is being overproduced.
 */
 
-bool
-overproduced(city_info_t *cityp, int *city_count)
+// cppcheck-suppress constParameter
+bool overproduced(city_info_t *cityp, int *city_count)
 {
     int i;
 
@@ -297,7 +300,7 @@ Return the most-needed type of production.
 */
 
 int
-need_more(int *city_count, int prod1, int prod2)
+need_more(const int *city_count, int prod1, int prod2)
 {
 	if (city_count[prod1] * ratio[prod2]
 		 <= city_count[prod2] * ratio[prod1])

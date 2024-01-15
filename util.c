@@ -24,7 +24,7 @@ Report a bug.
 */
 
 void
-assert(char *expression, char *file, int line)
+eassert(char *expression, char *file, int line)
 {
     char buf[STRSIZE];
 
@@ -170,8 +170,8 @@ Check object lists.  We look for:
 4)  Invalid owners.
 */
 
-void
-check_obj(piece_info_t **list, int owner)
+// cppcheck-suppress constParameter
+void check_obj(piece_info_t **list, int owner)
 {
     long i, j;
     piece_info_t *p;
@@ -211,8 +211,7 @@ Check for:
 6)  All cargo is alive.
 */
 
-void
-check_cargo(piece_info_t *list, int cargo_type)
+void check_cargo(piece_info_t *list, int cargo_type)
 {
     piece_info_t *p, *q;
     long j;
@@ -244,8 +243,8 @@ pointer appears in a cargo list.  We assume object and cargo
 lists are valid.
 */
 
-void
-check_obj_cargo(piece_info_t **list)
+// cppcheck-suppress constParameter
+void check_obj_cargo(piece_info_t **list)
 {
     piece_info_t *p;
     long i;

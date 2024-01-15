@@ -198,6 +198,9 @@ e_set_func(loc_t loc, long func)
 void
 e_set_city_func(city_info_t *cityp, int type, long func)
 {
+    ASSERT(cityp != NULL);
+
+    // cppcheck-suppress nullPointerRedundantCheck
     cityp->func[type] = func;
 }
 
@@ -465,7 +468,7 @@ e_end(loc_t *path_start, loc_t loc, int path_type)
 	e_set_func (*path_start, loc);
     else {
 	city_info_t *cityp = find_city (*path_start);
-	ASSERT (cityp);
+	ASSERT (cityp != NULL);
 	e_set_city_func (cityp, path_type, loc);
     }
 
@@ -568,6 +571,7 @@ e_city_info(loc_t edit_cursor)
 
     *func_buf = 0; /* nothing in buffer */
     for (s = 0; s < NUM_OBJECTS; s++) { /* for each piece */
+	// cppcheck-suppress nullPointerRedundantCheck
 	if (cityp->func[s] < 0)
 	    (void) sprintf (temp_buf, "%c:%s; ",
 			    piece_attr[s].sname,

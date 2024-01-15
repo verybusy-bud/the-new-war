@@ -88,9 +88,9 @@ TAGS: $(HEADERS) $(FILES)
 lint: $(FILES)
 	lint -u -D$(SYS) $(FILES) -lcurses
 
-# cppcheck should run clean
+# This should run clean
 cppcheck:
-	cppcheck --inline-suppr --suppress=unusedStructMember --suppress=unusedFunction  --template gcc --enable=all --force *.[ch]
+	cppcheck --inline-suppr --suppress=missingIncludeSystem --suppress=unusedFunction --template gcc --enable=all --force *.[ch]
 
 install: empire.6 uninstall
 	install -m 0755 -d $(DESTDIR)/usr/bin

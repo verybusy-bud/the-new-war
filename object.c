@@ -470,6 +470,9 @@ void describe_obj(piece_info_t *obj)
     char func[STRSIZE];
     char other[STRSIZE];
 
+    ASSERT(obj != NULL);
+
+    // cppcheck-suppress nullPointerRedundantCheck
     if (obj->func >= 0) (void) sprintf (func, "%d", loc_disp(obj->func));
     else (void) sprintf (func, func_name[FUNCI(obj->func)]);
 	
@@ -587,12 +590,17 @@ asking until we get a valid answer.
 void
 set_prod(city_info_t *cityp)
 {
+    ASSERT(cityp != NULL);
+
+    // cppcheck-suppress nullPointerRedundantCheck
     scan (game.user_map, cityp->loc);
+    // cppcheck-suppress nullPointerRedundantCheck
     display_loc_u (cityp->loc);
 
     for (;;) {
 	int i;
 
+	// cppcheck-suppress nullPointerRedundantCheck
 	prompt ("What do you want the city at %d to produce? ",loc_disp(cityp->loc));
 
 	i = get_piece_name ();

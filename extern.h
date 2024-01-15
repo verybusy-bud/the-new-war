@@ -79,7 +79,7 @@ void rmap_cont (int *cont_map, long loc, char bad_terrain);
 void vmap_mark_up_cont (int *cont_map, view_map_t *vmap, long loc, char bad_terrain);
 scan_counts_t vmap_cont_scan (int *cont_map, view_map_t *vmap);
 scan_counts_t rmap_cont_scan (int *cont_map);
-bool map_cont_edge (int *cont_map, long loc);
+bool map_cont_edge (const int *cont_map, long loc);
 long vmap_find_aobj (path_map_t path_map[], view_map_t *vmap, long loc, move_info_t *move_info);
 long vmap_find_wobj (path_map_t path_map[], view_map_t *vmap, long loc, move_info_t *move_info);
 long vmap_find_lobj (path_map_t path_map[], view_map_t *vmap, long loc, move_info_t *move_info);
@@ -181,7 +181,7 @@ void ksend (char *fmt, ...);
 
 /* utility routines */
 void ttinit (void);
-void assert (char *expression, char *file, int line);
+void eassert (char *expression, char *file, int line);
 void empend (void);
 char upper (char c);
 void tupper (char *str);

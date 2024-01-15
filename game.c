@@ -567,13 +567,20 @@ int restore_game(void)
     f = fopen (game.savefile, "r"); /* open for input */
     if (f == NULL) {
 	perror ("Cannot open saved game");
-	return (false);
+	return false;
     }
-    if (fgets(buf, sizeof(buf), f) == NULL)
+    if (fgets(buf, sizeof(buf), f) == NULL) {
+	fclose(f);
 	return false;
-    else if (strcmp(buf, SAVECOOKIE) != 0)
+    }
+    else if (strcmp(buf, SAVECOOKIE) != 0) {
+	fclose(f);
 	return false;
-    i = fread(buf, 1, sizeof(char), f);	/* skip trailing nul after cookie */ 
+    }
+    else if (fread(buf, 1, sizeof(char), f) != 1) {	/* skip trailing nul after cookie */
+	fclose(f);
+	return false;
+    }
     rbuf (game.real_map);
     rbuf (game.comp_map);
     rbuf (game.user_map);

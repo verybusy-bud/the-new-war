@@ -368,6 +368,7 @@ static void disp_city_prod(loc_t t) {
     attr = COLOR_PAIR(COLOR_CYAN);
     attron(attr);
 
+    // cppcheck-suppress nullPointerRedundantCheck
     (void) addch ((chtype)piece_attr[(int)cityp->prod].sname);
 
     attroff(attr);
@@ -561,6 +562,7 @@ print_pzoom_cell(path_map_t *pmap, view_map_t *vmap,
 	    sum += pmap[row_col_loc(r,c)].cost;
 	    d += 1;
 	}
+    // cppcheck-suppress zerodiv
     sum /= d;
 	
     if (pmap[row_col_loc(row,col)].terrain == T_PATH) cell = '-';

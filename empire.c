@@ -76,7 +76,6 @@ do_command(char orders)
     void c_debug(char order), c_quit(void), c_sector(void), c_map(void);
     void c_give(void);
 
-    char e;
     int ncycle;
 
     switch (orders) {
@@ -142,7 +141,7 @@ do_command(char orders)
 
     case 'R': /* restore game */
 	clear_screen ();
-	e = restore_game ();
+	restore_game ();
 	break;
 
     case 'S': /* save game */
@@ -169,12 +168,13 @@ do_command(char orders)
 	break;
 
     case '+': /* change debug state */
-	e = get_chx();
+	char e = get_chx();
 	if ( e  ==  '+' )
 	    game.debug = true;
 	else if ( e  ==  '-' )
 	    game.debug = false;
-	else huh ();
+	else
+	    huh ();
 	break;
 
     default:

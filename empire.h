@@ -22,8 +22,8 @@ typedef long loc_t;	/* represent a board location in 4-digit form */
 
 typedef long count_t;	/* for iterating over or counting board locations */
 
-#define ASSERT(x) if (!(x)) assert ("x", __FILE__, __LINE__);
-#define ABORT assert ("aborting", __FILE__, __LINE__)
+#define ASSERT(x) if (!(x)) eassert ("x", __FILE__, __LINE__);
+#define ABORT eassert ("aborting", __FILE__, __LINE__)
 
 /* directions one can move */
 #define NORTH 0

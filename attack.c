@@ -34,9 +34,10 @@ attack_city(piece_info_t *att_obj, loc_t loc)
     int att_owner, city_owner;
 
     cityp = find_city (loc);
-    ASSERT (cityp);
+    ASSERT (cityp != NULL);
 	
     att_owner = att_obj->owner;
+    // cppcheck-suppress nullPointerRedundantCheck
     city_owner = cityp->owner;
 
     if (irand (2) == 0) { /* attack fails? */
@@ -89,6 +90,7 @@ attack_obj(piece_info_t *att_obj, loc_t loc)
     def_obj = find_obj_at_loc (loc);
     ASSERT (def_obj != NULL); /* can't find object to attack? */
 	
+    // cppcheck-suppress nullPointerRedundantCheck
     if (def_obj->type == SATELLITE) return; /* can't attack a satellite */
 
     while (att_obj->hits > 0 && def_obj->hits > 0) {
