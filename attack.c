@@ -70,7 +70,9 @@ attack_city(piece_info_t *att_obj, loc_t loc)
 	}
     }
     /* let city owner see all results */
-    if (city_owner != UNOWNED) scan (MAP(city_owner), loc);
+    if (city_owner != UNOWNED) {
+        scan (MAP(city_owner), loc);
+    }
 }
 
 /*
@@ -91,12 +93,17 @@ attack_obj(piece_info_t *att_obj, loc_t loc)
     ASSERT (def_obj != NULL); /* can't find object to attack? */
 	
     // cppcheck-suppress nullPointerRedundantCheck
-    if (def_obj->type == SATELLITE) return; /* can't attack a satellite */
+    if (def_obj->type == SATELLITE) {
+        return; /* can't attack a satellite */
+    }
 
     while (att_obj->hits > 0 && def_obj->hits > 0) {
-	if (irand (2) == 0) /* defender hits? */
-	    att_obj->hits -= piece_attr[def_obj->type].strength;
-	else def_obj->hits -= piece_attr[att_obj->type].strength;
+	if (irand (2) == 0) /* defender hits? */ {
+	      att_obj->hits -= piece_attr[def_obj->type].strength;
+	}
+	else {
+	    def_obj->hits -= piece_attr[att_obj->type].strength;
+	}
     }
 
     if (att_obj->hits > 0) { /* attacker won? */
@@ -118,8 +125,9 @@ attack_obj(piece_info_t *att_obj, loc_t loc)
 void
 attack(piece_info_t *att_obj, loc_t loc)
 {
-    if (game.real_map[loc].contents == MAP_CITY) /* attacking a city? */
-	attack_city (att_obj, loc);
+    if (game.real_map[loc].contents == MAP_CITY) /* attacking a city? */ {
+	  attack_city (att_obj, loc);
+    }
     else attack_obj (att_obj, loc); /* attacking a piece */
 }
 
@@ -133,8 +141,9 @@ location.
 void
 survive(piece_info_t *obj, loc_t loc)
 {
-    while (obj_capacity (obj) < obj->count)
-	kill_obj (obj->cargo, loc);
+    while (obj_capacity (obj) < obj->count) {
+	  kill_obj (obj->cargo, loc);
+    }
 		
     move_obj (obj, loc);
 }

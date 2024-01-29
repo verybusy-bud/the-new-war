@@ -61,8 +61,9 @@ static void vtopmsg(int line, const char *fmt, va_list varglist)
 {
     char junkbuf[STRSIZE];
 	
-    if (line < 1 || line > NUMTOPS)
+    if (line < 1 || line > NUMTOPS) {
 	line = 1;
+    }
     (void) move (line - 1, 0);
     vsnprintf(junkbuf, sizeof(junkbuf), fmt, varglist);
     (void) addstr (junkbuf);
@@ -160,8 +161,9 @@ comment (char *fmt, ...)
     va_list ap;
 
     va_start(ap, fmt);
-    if (need_delay)
+    if (need_delay) {
 	delay ();
+    }
     topmsg (1, "");
     topmsg (2, "");
     vtopmsg (3, fmt, ap);
@@ -177,8 +179,9 @@ pdebug(char *fmt, ...)
     if (!game.print_debug) return;
 
     va_start(ap, fmt);
-    if (need_delay)
+    if (need_delay) {
 	delay ();
+    }
     topmsg (1, "");
     topmsg (2, "");
     vtopmsg (3, fmt, ap);
@@ -250,10 +253,12 @@ get_chx(void)
 
     c = get_cq ();
 
-    if (islower(c))
+    if (islower(c)) {
 	return (toupper(c));
-    else
+    }
+    else {
 	return (c);
+    }
 }
 
 /*
@@ -277,9 +282,12 @@ getint(char *message)
 	    }
 	}
 	if (*p == 0) { /* no error yet? */
-	    if (p - buf > 7) /* too many digits? */
-		error ("Please enter a small integer.",0,0,0,0,0,0,0,0);
-	    else return (atoi (buf));
+	    if (p - buf > 7) /* too many digits? */ {
+		  error ("Please enter a small integer.",0,0,0,0,0,0,0,0);
+	    }
+	    else {
+		return (atoi (buf));
+	    }
 	}
     }
 }
@@ -347,7 +355,9 @@ get_range(char *message, int low, int high)
     for (;;) {
 	int result = getint (message);
 
-	if (result >= low && result <= high) return (result);
+	if (result >= low && result <= high) {
+	    return (result);
+	}
 
 	error ("Please enter an integer in the range %d..%d.",low, high);
     }
@@ -371,9 +381,12 @@ help(char **text, int nlines)
     pos_str (NUMTOPS, 41, "See empire(6) for more information.");
 
     for (i = 1; i < nlines; i++) {
-	if (i > text_lines)
-	    pos_str (i - text_lines + NUMTOPS + 1, 41, text[i]);
-	else pos_str (i + NUMTOPS + 1, 1, text[i]);
+	if (i > text_lines) {
+	      pos_str (i - text_lines + NUMTOPS + 1, 41, text[i]);
+	}
+	else {
+	    pos_str (i + NUMTOPS + 1, 1, text[i]);
+	}
     }
 
     pos_str (text_lines + NUMTOPS + 2,  1, "--Piece---Yours-Enemy-Moves-Hits-Cost");

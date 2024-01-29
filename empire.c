@@ -44,8 +44,9 @@ empire(void)
     pos_str (8, 0, "Detailed directions are in EMPIRE.DOC\n");
     (void) redisplay ();
 
-    if (!restore_game ()) /* try to restore previous game */
+    if (!restore_game ()) /* try to restore previous game */ {
 	init_game (); /* otherwise init a new game */
+    }
 
     /* Command loop starts here. */
 
@@ -53,8 +54,9 @@ empire(void)
 	if (game.automove) { /* don't ask for cmd in auto mode */
 	    user_move ();
 	    comp_move (1);
-	    if (++turn % game.save_interval == 0)
+	    if (++turn % game.save_interval == 0) {
 		save_game ();
+	    }
 	}
 	else {
 	    prompt (""); /* blank top line */
@@ -150,8 +152,12 @@ do_command(char orders)
 	
     case 'T': /* trace: toggle game.save_movie flag */
 	game.save_movie = !game.save_movie;
-	if (game.save_movie) comment ("Saving movie screens to 'empmovie.dat'.");
-	else comment ("No longer saving movie screens.");
+	if (game.save_movie) {
+	    comment ("Saving movie screens to 'empmovie.dat'.");
+	}
+	else {
+	    comment ("No longer saving movie screens.");
+	}
 	break;
 
     case 'W': /* watch movie */
@@ -169,19 +175,24 @@ do_command(char orders)
 
     case '+': /* change debug state */
 	char e = get_chx();
-	if ( e  ==  '+' )
+	if ( e  ==  '+' ) {
 	    game.debug = true;
-	else if ( e  ==  '-' )
+	}
+	else if ( e  ==  '-' ) {
 	    game.debug = false;
-	else
+	}
+	else {
 	    huh ();
+	}
 	break;
 
     default:
-	if (game.debug)
-	    c_debug (orders); /* debug */
-	else
-	    huh (); /* illegal command */
+	if (game.debug) {
+	      c_debug (orders); /* debug */
+	}
+	else {
+	      huh (); /* illegal command */
+	}
 	break;
     }
 }
@@ -234,29 +245,36 @@ c_debug(char order)
 	
     case '@': /* change trace state */
 	e = get_chx();
-	if ( e  ==  '+' )
+	if ( e  ==  '+' ) {
 	    game.trace_pmap = true;
-	else if ( e  ==  '-' )
+	}
+	else if ( e  ==  '-' ) {
 	    game.trace_pmap = false;
-	else
+	}
+	else {
 	    huh ();
+	}
 	break;
 
     case '$': /* change game.print_debug state */
 	e = get_chx();
-	if ( e  ==  '+' )
+	if ( e  ==  '+' ) {
 	    game.print_debug = true;
-	else if ( e  ==  '-' )
+	}
+	else if ( e  ==  '-' ) {
 	    game.print_debug = false;
-	else
+	}
+	else {
 	    huh ();
+	}
 	break;
 
     case '&': /* change game.print_vmap state */
 	game.print_vmap = get_chx();
 	break;
 
-    default: huh (); break;
+    default:
+        huh (); break;
     }
 }
 
@@ -313,8 +331,9 @@ c_map(void)
 	    line[MAP_HEIGHT-1-j] = game.user_map[row_col_loc(j,i)].contents;
 	}
 	j = MAP_HEIGHT-1;
-	while (j >= 0 && line[j] == ' ') /* scan off trailing blanks */
+	while (j >= 0 && line[j] == ' ') /* scan off trailing blanks */ {
 	    j -= 1;
+	}
 			
 	line[++j] = '\n';
 	line[++j] = 0; /* trailing null */

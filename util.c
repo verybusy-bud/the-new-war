@@ -104,8 +104,9 @@ check(void)
 	ASSERT (!in_free[i]);
 	in_free[i] = 1;
 	ASSERT (p->hits == 0);
-	if (p->piece_link.prev)
+	if (p->piece_link.prev) {
 	    ASSERT (p->piece_link.prev->piece_link.next == p);
+	}
     }
 	
     /* Mark all objects in the map.
@@ -125,15 +126,17 @@ check(void)
 	    ASSERT (!in_loc[j]);
 	    in_loc[j] = 1;
 			
-	    if (p->loc_link.prev)
+	    if (p->loc_link.prev) {
 		ASSERT (p->loc_link.prev->loc_link.next == p);
+	    }
 	}
     }
 
     /* make sure all cities are on map */
 
-    for (i = 0; i < NUM_CITY; i++)
+    for (i = 0; i < NUM_CITY; i++) {
 	ASSERT (game.real_map[game.city[i].loc].cityp == &(game.city[i]));
+    }
 
     /* Scan object lists. */
 	
@@ -154,8 +157,9 @@ check(void)
 	
     /* Make sure every object is either free or in loc and obj list. */
 
-    for (i = 0; i < LIST_SIZE; i++)
+    for (i = 0; i < LIST_SIZE; i++) {
 	ASSERT (in_free[i] != (in_loc[i] && in_obj[i]));
+    }
 }
 
 /*
@@ -186,8 +190,9 @@ void check_obj(piece_info_t **list, int owner)
 	    ASSERT (!in_obj[j]);
 	    in_obj[j] = 1;
 	
-	    if (p->piece_link.prev)
+	    if (p->piece_link.prev) {
 		ASSERT (p->piece_link.prev->piece_link.next == p);
+	    }
 	}
 }
 
@@ -230,8 +235,9 @@ void check_cargo(piece_info_t *list, int cargo_type)
 	    ASSERT (!in_cargo[j]);
 	    in_cargo[j] = 1;
 
-	    if (p->cargo_link.prev)
+	    if (p->cargo_link.prev) {
 		ASSERT (p->cargo_link.prev->cargo_link.next == p);
+	    }
 	}
 	ASSERT (count == p->count);
     }
@@ -249,10 +255,11 @@ void check_obj_cargo(piece_info_t **list)
     piece_info_t *p;
     long i;
 
-    for (i = 0; i < NUM_OBJECTS; i++)
+    for (i = 0; i < NUM_OBJECTS; i++) {
 	for (p = list[i]; p != NULL; p = p->piece_link.next) {
 	    if (p->ship) ASSERT (in_cargo[p-game.object]);
 	}
+    }
 }
 
 /* end */

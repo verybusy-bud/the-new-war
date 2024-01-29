@@ -91,6 +91,8 @@ int isqrt(int n)
 	guess = (guess + n/guess) / 2;
 	guess = (guess + n/guess) / 2;
 	
-	if (guess * guess > n) guess -= 1; /* take floor */
+	if (guess * guess > n) {
+	    guess -= 1; /* take floor */
+	}
 	return (guess);
 }
