@@ -114,6 +114,9 @@ clean:
 	rm -f *.o TAGS vms-empire
 	rm -f *.6 *.html
 
+reflow:
+	@clang-format --style="{IndentWidth: 8, UseTab: ForIndentation}" -i $$(find . -name "*.[ch]")
+
 clobber: clean
 	rm -f vms-empire vms-empire-*.tar*
 

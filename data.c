@@ -1,7 +1,7 @@
 /*
  * SPDX-FileCopyrightText: Copyright (C) 1987, 1988 Chuck Simmons
  * SPDX-License-Identifier: GPL-2.0+
- * 
+ *
  * See the file COPYING, distributed with empire, for restriction
  * and warranty information.
  */
@@ -16,6 +16,7 @@ However, see also the help routine, empire.h, and empire.6.
 
 #include "empire.h"
 
+// clang-format off
 /*
 Piece attributes.  Notice that the Transport is allowed only one hit.
 In the previous version of this game, the user could easily win simply
@@ -263,3 +264,5 @@ char *help_edit[] = {
 	"?:        describe piece"
 };
 int edit_lines = 22;
+
+// clang-format on

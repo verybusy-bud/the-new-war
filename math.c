@@ -1,7 +1,7 @@
 /*
  * SPDX-FileCopyrightText: Copyright (C) 1987, 1988 Chuck Simmons
  * SPDX-License-Identifier: GPL-2.0+
- * 
+ *
  * See the file COPYING, distributed with empire, for restriction
  * and warranty information.
  */
@@ -21,18 +21,14 @@ Other routines include:
     dist (a, b) -- returns the straight-line distance between two locations.
 */
 
-#include <stdlib.h>
-#include <time.h>
 #include "empire.h"
 #include "extern.h"
+#include <stdlib.h>
+#include <time.h>
 
-void rndini(void)
-{
-	srand((unsigned)(time(0) & 0xFFFF));
-}
+void rndini(void) { srand((unsigned)(time(0) & 0xFFFF)); }
 
-long irand(long high)
-{
+long irand(long high) {
 	if (high < 2) {
 		return (0);
 	}
@@ -40,8 +36,7 @@ long irand(long high)
 }
 
 #ifdef __UNUSED__
-int rndint(int minp, int maxp)
-{
+int rndint(int minp, int maxp) {
 	int size;
 
 	size = maxp - minp + 1;
@@ -54,21 +49,19 @@ Return the distance between two locations.  This is simply
 the max of the absolute differnce between the x and y coordinates.
 */
 
-#define MIN(a,b) ((a)<(b) ? (a) : (b))
-#define MAX(a,b) ((a)>(b) ? (a) : (b))
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
 #define ABS(a) ((a) < 0 ? -(a) : (a))
 
-int
-dist(loc_t a, loc_t b)
-{
+int dist(loc_t a, loc_t b) {
 	int ax, ay, bx, by;
 
-	ax = loc_row (a);
-	ay = loc_col (a);
-	bx = loc_row (b);
-	by = loc_col (b);
+	ax = loc_row(a);
+	ay = loc_col(a);
+	bx = loc_row(b);
+	by = loc_col(b);
 
-	return (MAX (ABS (ax-bx), ABS (ay-by)));
+	return (MAX(ABS(ax - bx), ABS(ay - by)));
 }
 
 /*
@@ -76,23 +69,23 @@ Find the square root of an integer.  We actually return the floor
 of the square root using Newton's method.
 */
 
-int isqrt(int n)
-{
+int isqrt(int n) {
 	int guess;
-	
-	ASSERT (n >= 0); /* can't take sqrt of negative number */
 
-	if (n <= 1) return (n); /* do easy cases and avoid div by zero */
-		
+	ASSERT(n >= 0); /* can't take sqrt of negative number */
+
+	if (n <= 1)
+		return (n); /* do easy cases and avoid div by zero */
+
 	guess = 2; /* gotta start somewhere */
-	guess = (guess + n/guess) / 2;
-	guess = (guess + n/guess) / 2;
-	guess = (guess + n/guess) / 2;
-	guess = (guess + n/guess) / 2;
-	guess = (guess + n/guess) / 2;
-	
+	guess = (guess + n / guess) / 2;
+	guess = (guess + n / guess) / 2;
+	guess = (guess + n / guess) / 2;
+	guess = (guess + n / guess) / 2;
+	guess = (guess + n / guess) / 2;
+
 	if (guess * guess > n) {
-	    guess -= 1; /* take floor */
+		guess -= 1; /* take floor */
 	}
 	return (guess);
 }

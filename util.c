@@ -1,7 +1,7 @@
 /*
  * SPDX-FileCopyrightText: Copyright (C) 1987, 1988 Chuck Simmons
  * SPDX-License-Identifier: GPL-2.0+
- * 
+ *
  * See the file COPYING, distributed with empire, for restriction
  * and warranty information.
  */
@@ -10,44 +10,39 @@
 util.c -- various utility routines.
 */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <curses.h>	/* Ugh...shouldn't be needed here */
-#include <signal.h>
-#include <sys/types.h>
-#include <unistd.h>
 #include "empire.h"
 #include "extern.h"
+#include <curses.h> /* Ugh...shouldn't be needed here */
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 /*
 Report a bug.
 */
 
-void
-eassert(char *expression, char *file, int line)
-{
-    char buf[STRSIZE];
+void eassert(char *expression, char *file, int line) {
+	char buf[STRSIZE];
 
-    (void) move (game.lines, 0);
-    close_disp ();
+	(void)move(game.lines, 0);
+	close_disp();
 
-    (void) sprintf (buf, "assert failed: file %s line %d: %s",
-		    file, line, expression);
+	(void)sprintf(buf, "assert failed: file %s line %d: %s", file, line,
+	              expression);
 
-    kill(getpid(), SIGSEGV);	/* core dump */
+	kill(getpid(), SIGSEGV); /* core dump */
 }
 
 /*
 End the game by cleaning up the display.
 */
 
-void
-empend(void)
-{
-    close_disp ();
-    exit (0);
+void empend(void) {
+	close_disp();
+	exit(0);
 }
-
 
 /*
 Here is a little routine to perform consistency checking on the
@@ -73,93 +68,94 @@ objects on the map have non-zero hits.
 cargo list.
 */
 
-static bool in_free[LIST_SIZE]; /* true if object in free list */
-static bool in_obj[LIST_SIZE]; /* true if object in obj list */
-static bool in_loc[LIST_SIZE]; /* true if object in a loc list */
+static bool in_free[LIST_SIZE];  /* true if object in free list */
+static bool in_obj[LIST_SIZE];   /* true if object in obj list */
+static bool in_loc[LIST_SIZE];   /* true if object in a loc list */
 static bool in_cargo[LIST_SIZE]; /* true if object in a cargo list */
 
-void
-check(void)
-{
-    void check_cargo(piece_info_t *, int);
-    void check_obj(piece_info_t **, int);
-    void check_obj_cargo(piece_info_t **);
-	
-    long i, j;
-    piece_info_t *p;
-	
-    /* nothing in any list yet */
-    for (i = 0; i < LIST_SIZE; i++) {
-	in_free[i] = 0;
-	in_obj[i] = 0;
-	in_loc[i] = 0;
-	in_cargo[i] = 0;
-    }
-		
-    /* Mark all objects in free list.  Make sure objects in free list
-       have zero hits. */
-	
-    for (p = game.free_list; p != NULL; p = p->piece_link.next) {
-	i = p - game.object;
-	ASSERT (!in_free[i]);
-	in_free[i] = 1;
-	ASSERT (p->hits == 0);
-	if (p->piece_link.prev) {
-	    ASSERT (p->piece_link.prev->piece_link.next == p);
+void check(void) {
+	void check_cargo(piece_info_t *, int);
+	void check_obj(piece_info_t **, int);
+	void check_obj_cargo(piece_info_t **);
+
+	long i, j;
+	piece_info_t *p;
+
+	/* nothing in any list yet */
+	for (i = 0; i < LIST_SIZE; i++) {
+		in_free[i] = 0;
+		in_obj[i] = 0;
+		in_loc[i] = 0;
+		in_cargo[i] = 0;
 	}
-    }
-	
-    /* Mark all objects in the map.
-       Check that cities are in corect location.
-       Check that objects are in correct location,
-       have a good owner, and good hits. */
-	
-    for (i = 0; i < MAP_SIZE; i++) {
-	if (game.real_map[i].cityp) ASSERT (game.real_map[i].cityp->loc == i);
-		
-	for (p = game.real_map[i].objp; p != NULL; p = p->loc_link.next) {
-	    ASSERT (p->loc == i);
-	    ASSERT (p->hits > 0);
-	    ASSERT (p->owner == USER || p->owner == COMP);
-				
-	    j = p - game.object;
-	    ASSERT (!in_loc[j]);
-	    in_loc[j] = 1;
-			
-	    if (p->loc_link.prev) {
-		ASSERT (p->loc_link.prev->loc_link.next == p);
-	    }
+
+	/* Mark all objects in free list.  Make sure objects in free list
+	   have zero hits. */
+
+	for (p = game.free_list; p != NULL; p = p->piece_link.next) {
+		i = p - game.object;
+		ASSERT(!in_free[i]);
+		in_free[i] = 1;
+		ASSERT(p->hits == 0);
+		if (p->piece_link.prev) {
+			ASSERT(p->piece_link.prev->piece_link.next == p);
+		}
 	}
-    }
 
-    /* make sure all cities are on map */
+	/* Mark all objects in the map.
+	   Check that cities are in corect location.
+	   Check that objects are in correct location,
+	   have a good owner, and good hits. */
 
-    for (i = 0; i < NUM_CITY; i++) {
-	ASSERT (game.real_map[game.city[i].loc].cityp == &(game.city[i]));
-    }
+	for (i = 0; i < MAP_SIZE; i++) {
+		if (game.real_map[i].cityp)
+			ASSERT(game.real_map[i].cityp->loc == i);
 
-    /* Scan object lists. */
-	
-    check_obj (game.comp_obj, COMP);
-    check_obj (game.user_obj, USER);
-	
-    /* Scan cargo lists. */
-	
-    check_cargo (game.user_obj[TRANSPORT], ARMY);
-    check_cargo (game.comp_obj[TRANSPORT], ARMY);
-    check_cargo (game.user_obj[CARRIER], FIGHTER);
-    check_cargo (game.comp_obj[CARRIER], FIGHTER);
-	
-    /* Make sure all objects with ship pointers are in cargo. */
+		for (p = game.real_map[i].objp; p != NULL;
+		     p = p->loc_link.next) {
+			ASSERT(p->loc == i);
+			ASSERT(p->hits > 0);
+			ASSERT(p->owner == USER || p->owner == COMP);
 
-    check_obj_cargo (game.comp_obj);
-    check_obj_cargo (game.user_obj);
-	
-    /* Make sure every object is either free or in loc and obj list. */
+			j = p - game.object;
+			ASSERT(!in_loc[j]);
+			in_loc[j] = 1;
 
-    for (i = 0; i < LIST_SIZE; i++) {
-	ASSERT (in_free[i] != (in_loc[i] && in_obj[i]));
-    }
+			if (p->loc_link.prev) {
+				ASSERT(p->loc_link.prev->loc_link.next == p);
+			}
+		}
+	}
+
+	/* make sure all cities are on map */
+
+	for (i = 0; i < NUM_CITY; i++) {
+		ASSERT(game.real_map[game.city[i].loc].cityp ==
+		       &(game.city[i]));
+	}
+
+	/* Scan object lists. */
+
+	check_obj(game.comp_obj, COMP);
+	check_obj(game.user_obj, USER);
+
+	/* Scan cargo lists. */
+
+	check_cargo(game.user_obj[TRANSPORT], ARMY);
+	check_cargo(game.comp_obj[TRANSPORT], ARMY);
+	check_cargo(game.user_obj[CARRIER], FIGHTER);
+	check_cargo(game.comp_obj[CARRIER], FIGHTER);
+
+	/* Make sure all objects with ship pointers are in cargo. */
+
+	check_obj_cargo(game.comp_obj);
+	check_obj_cargo(game.user_obj);
+
+	/* Make sure every object is either free or in loc and obj list. */
+
+	for (i = 0; i < LIST_SIZE; i++) {
+		ASSERT(in_free[i] != (in_loc[i] && in_obj[i]));
+	}
 }
 
 /*
@@ -175,25 +171,25 @@ Check object lists.  We look for:
 */
 
 // cppcheck-suppress constParameter
-void check_obj(piece_info_t **list, int owner)
-{
-    long i, j;
-    piece_info_t *p;
-	
-    for (i = 0; i < NUM_OBJECTS; i++)
-	for (p = list[i]; p != NULL; p = p->piece_link.next) {
-	    ASSERT (p->owner == owner);
-	    ASSERT (p->type == i);
-	    ASSERT (p->hits > 0);
-		
-	    j = p - game.object;
-	    ASSERT (!in_obj[j]);
-	    in_obj[j] = 1;
-	
-	    if (p->piece_link.prev) {
-		ASSERT (p->piece_link.prev->piece_link.next == p);
-	    }
-	}
+void check_obj(piece_info_t **list, int owner) {
+	long i, j;
+	piece_info_t *p;
+
+	for (i = 0; i < NUM_OBJECTS; i++)
+		for (p = list[i]; p != NULL; p = p->piece_link.next) {
+			ASSERT(p->owner == owner);
+			ASSERT(p->type == i);
+			ASSERT(p->hits > 0);
+
+			j = p - game.object;
+			ASSERT(!in_obj[j]);
+			in_obj[j] = 1;
+
+			if (p->piece_link.prev) {
+				ASSERT(p->piece_link.prev->piece_link.next ==
+				       p);
+			}
+		}
 }
 
 /*
@@ -216,31 +212,31 @@ Check for:
 6)  All cargo is alive.
 */
 
-void check_cargo(piece_info_t *list, int cargo_type)
-{
-    piece_info_t *p, *q;
-    long j;
-	
-    for (p = list; p != NULL; p = p->piece_link.next) {
-	long count = 0;
-	for (q = p->cargo; q != NULL; q = q->cargo_link.next) {
-	    count += 1; /* count items in list */
-	    ASSERT (q->type == cargo_type);
-	    ASSERT (q->owner == p->owner);
-	    ASSERT (q->hits > 0);
-	    ASSERT (q->ship == p);
-	    ASSERT (q->loc == p->loc);
-			
-	    j = q - game.object;
-	    ASSERT (!in_cargo[j]);
-	    in_cargo[j] = 1;
+void check_cargo(piece_info_t *list, int cargo_type) {
+	piece_info_t *p, *q;
+	long j;
 
-	    if (p->cargo_link.prev) {
-		ASSERT (p->cargo_link.prev->cargo_link.next == p);
-	    }
+	for (p = list; p != NULL; p = p->piece_link.next) {
+		long count = 0;
+		for (q = p->cargo; q != NULL; q = q->cargo_link.next) {
+			count += 1; /* count items in list */
+			ASSERT(q->type == cargo_type);
+			ASSERT(q->owner == p->owner);
+			ASSERT(q->hits > 0);
+			ASSERT(q->ship == p);
+			ASSERT(q->loc == p->loc);
+
+			j = q - game.object;
+			ASSERT(!in_cargo[j]);
+			in_cargo[j] = 1;
+
+			if (p->cargo_link.prev) {
+				ASSERT(p->cargo_link.prev->cargo_link.next ==
+				       p);
+			}
+		}
+		ASSERT(count == p->count);
 	}
-	ASSERT (count == p->count);
-    }
 }
 
 /*
@@ -250,16 +246,16 @@ lists are valid.
 */
 
 // cppcheck-suppress constParameter
-void check_obj_cargo(piece_info_t **list)
-{
-    piece_info_t *p;
-    long i;
+void check_obj_cargo(piece_info_t **list) {
+	piece_info_t *p;
+	long i;
 
-    for (i = 0; i < NUM_OBJECTS; i++) {
-	for (p = list[i]; p != NULL; p = p->piece_link.next) {
-	    if (p->ship) ASSERT (in_cargo[p-game.object]);
+	for (i = 0; i < NUM_OBJECTS; i++) {
+		for (p = list[i]; p != NULL; p = p->piece_link.next) {
+			if (p->ship)
+				ASSERT(in_cargo[p - game.object]);
+		}
 	}
-    }
 }
 
 /* end */
