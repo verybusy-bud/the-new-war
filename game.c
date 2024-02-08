@@ -494,8 +494,11 @@ void make_pair(void) {
 					pair_tab[k] = pair_tab[k - 1];
 					pair_tab[k - 1].user_cont = i;
 					pair_tab[k - 1].comp_cont = j;
-				} else
+					// Sort fix from Sarvottamananda
+					pair_tab[k-1].value = val;
+				} else {
 					break;
+				}
 			}
 			npair++; /* count pairs */
 		}
