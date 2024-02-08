@@ -128,7 +128,7 @@ void info(char *a, char *b, char *c) {
 	topmsg(1, a);
 	topmsg(2, b);
 	topmsg(3, c);
-	need_delay = (a || b || c);
+	need_delay = (strlen(a) || strlen(b) || strlen(c));
 }
 
 void set_need_delay(void) { need_delay = true; }

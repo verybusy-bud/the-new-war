@@ -39,7 +39,7 @@ void empire(void) {
 
 	clear_screen(); /* nothing on screen */
 	pos_str(7, 0, "EMPIRE, Version 5.00 site Amdahl 1-Apr-1988");
-	pos_str(8, 0, "Detailed directions are in EMPIRE.DOC\n");
+	pos_str(8, 0, "Detailed directions are on the manual page\n");
 	(void)redisplay();
 
 	if (!restore_game()) /* try to restore previous game */ {

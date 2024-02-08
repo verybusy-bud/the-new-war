@@ -1,5 +1,8 @@
 			vms-empire news
 
+Repository head::
+	Remove unnecessaty delays.
+
 1.15: 2021-02-25 20:52:1Z
 	Minor documentation fixes and code cleanup.
 
