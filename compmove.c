@@ -231,6 +231,7 @@ void comp_prod(city_info_t *cityp, bool is_lake) {
 
 			// It's mysterious why the following exclusion is
 			// required... cppcheck-suppress arrayIndexOutOfBounds
+			// cppcheck-suppress arrayIndexOutOfBounds
 			if (!lake(game.city[i].loc)) {
 				comp_set_prod(cityp, ARMY);
 				return;

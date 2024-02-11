@@ -577,8 +577,8 @@ void set_prod(city_info_t *cityp) {
 	for (;;) {
 		int i;
 
-		// cppcheck-suppress nullPointerRedundantCheck
 		prompt("What do you want the city at %d to produce? ",
+		       // cppcheck-suppress nullPointerRedundantCheck
 		       loc_disp(cityp->loc));
 
 		i = get_piece_name();
