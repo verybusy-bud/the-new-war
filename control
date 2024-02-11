@@ -29,4 +29,4 @@ XBS-Logo: vms-empire.png
 
 XBS-VC-Tag-Template: %(version)s
 
-XBS-Validate: make cpp
+XBS-Validate: make cppcheck
