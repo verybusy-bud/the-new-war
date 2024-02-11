@@ -81,26 +81,32 @@ void vmap_mark_up_cont(int *cont_map, view_map_t *vmap, loc_t loc,
 	while (from->len) {
 		to->len = 0; /* nothing in new perimeter yet */
 
-		for (i = 0; i < from->len; i++) /* expand perimeter */
+		for (i = 0; i < from->len; i++) { /* expand perimeter */
 			FOR_ADJ_ON(from->list[i], new_loc, j)
-		if (!cont_map[new_loc]) {
-			/* mark, but don't expand, unexplored territory */
-			if (vmap[new_loc].contents == ' ')
-				cont_map[new_loc] = 1;
-			else {
-				if (vmap[new_loc].contents == MAP_LAND)
-					this_terrain = MAP_LAND;
-				else if (vmap[new_loc].contents == MAP_SEA)
-					this_terrain = MAP_SEA;
-				else
-					this_terrain =
-					    game.real_map[new_loc].contents;
-
-				if (this_terrain !=
-				    bad_terrain) { /* on continent? */
+			if (!cont_map[new_loc]) {
+				/* mark, but don't expand, unexplored territory
+				 */
+				if (vmap[new_loc].contents == ' ') {
 					cont_map[new_loc] = 1;
-					to->list[to->len] = new_loc;
-					to->len += 1;
+				} else {
+					if (vmap[new_loc].contents ==
+					    MAP_LAND) {
+						this_terrain = MAP_LAND;
+					} else if (vmap[new_loc].contents ==
+					           MAP_SEA) {
+						this_terrain = MAP_SEA;
+					} else {
+						this_terrain =
+						    game.real_map[new_loc]
+						        .contents;
+					}
+
+					if (this_terrain !=
+					    bad_terrain) { /* on continent? */
+						cont_map[new_loc] = 1;
+						to->list[to->len] = new_loc;
+						to->len += 1;
+					}
 				}
 			}
 		}
@@ -135,13 +141,15 @@ static void rmap_mark_up_cont(int *cont_map, loc_t loc, char bad_terrain) {
 	int i;
 	loc_t new_loc;
 
-	if (!game.real_map[loc].on_board)
+	if (!game.real_map[loc].on_board) {
 		return; /* off board */
-	if (cont_map[loc])
+	}
+	if (cont_map[loc]) {
 		return; /* already marked */
-	if (game.real_map[loc].contents == bad_terrain)
+	}
+	if (game.real_map[loc].contents == bad_terrain) {
 		return; /* off continent */
-
+	}
 	cont_map[loc] = 1; /* on continent */
 
 	FOR_ADJ(loc, new_loc, i)
@@ -223,8 +231,9 @@ scan_counts_t rmap_cont_scan(int *cont_map) {
 	for (i = 0; i < MAP_SIZE; i++) {
 		if (cont_map[i]) { /* cell on continent? */
 			counts.size += 1;
-			if (game.real_map[i].contents == MAP_CITY)
+			if (game.real_map[i].contents == MAP_CITY) {
 				counts.unowned_cities += 1;
+			}
 		}
 	}
 	return counts;
@@ -237,13 +246,13 @@ Return true if a location is on the edge of a continent.
 bool map_cont_edge(const int *cont_map, loc_t loc) {
 	loc_t i, j;
 
-	if (!cont_map[loc])
+	if (!cont_map[loc]) {
 		return false; /* not on continent */
-
+	}
 	FOR_ADJ(loc, j, i)
-	if (!cont_map[j])
+	if (!cont_map[j]) {
 		return true; /* edge of continent */
-
+	}
 	return false;
 }
 
@@ -296,12 +305,14 @@ loc_t vmap_find_xobj(path_map_t path_map[], view_map_t *vmap, loc_t loc,
 		expand_perimeter(path_map, vmap, move_info, from, expand,
 		                 cur_cost, 1, 1, to, to);
 
-		if (game.trace_pmap)
+		if (game.trace_pmap) {
 			print_pzoom("After xobj loop:", path_map, vmap);
+		}
 
 		cur_cost += 1;
-		if (to->len == 0 || best_cost <= cur_cost)
+		if (to->len == 0 || best_cost <= cur_cost) {
 			return best_loc;
+		}
 
 		SWAP(from, to);
 	}
@@ -373,8 +384,9 @@ loc_t vmap_find_lwobj(path_map_t path_map[], view_map_t *vmap, loc_t loc,
 		expand_perimeter(path_map, vmap, move_info, new_water, T_WATER,
 		                 cur_cost + 1, 1, 1, cur_water, NULL);
 
-		if (game.trace_pmap)
+		if (game.trace_pmap) {
 			print_pzoom("After lwobj loop:", path_map, vmap);
+		}
 
 		cur_cost += 2;
 		if ((cur_water->len == 0 && new_land->len == 0) ||
@@ -400,8 +412,9 @@ static int best_adj(path_map_t *pmap, loc_t loc, int type) {
 	best = INFINITY;
 
 	FOR_ADJ(loc, new_loc, i)
-	if (pmap[new_loc].terrain == type && pmap[new_loc].cost < best)
+	if (pmap[new_loc].terrain == type && pmap[new_loc].cost < best) {
 		best = pmap[new_loc].cost;
+	}
 
 	return best;
 }
@@ -450,8 +463,9 @@ loc_t vmap_find_wlobj(path_map_t path_map[], view_map_t *vmap, loc_t loc,
 		expand_perimeter(path_map, vmap, move_info, new_water, T_WATER,
 		                 cur_cost + 1, 1, 1, cur_water, NULL);
 
-		if (game.trace_pmap)
+		if (game.trace_pmap) {
 			print_pzoom("After wlobj loop:", path_map, vmap);
+		}
 
 		cur_cost += 2;
 		if ((cur_water->len == 0 && new_land->len == 0) ||
@@ -535,7 +549,7 @@ expand_perimeter(path_map_t *pmap, view_map_t *vmap, move_info_t *move_info,
 	int obj_cost;
 	register int new_type;
 
-	for (i = 0; i < curp->len; i++) /* for each perimeter cell... */
+	for (i = 0; i < curp->len; i++) { /* for each perimeter cell... */
 		FOR_ADJ_ON(curp->list[i], new_loc,
 		           j) { /* for each adjacent cell... */
 			register path_map_t *pm = pmap + new_loc;
@@ -544,15 +558,15 @@ expand_perimeter(path_map_t *pmap, view_map_t *vmap, move_info_t *move_info,
 				new_type = terrain_type(pmap, vmap, move_info,
 				                        curp->list[i], new_loc);
 
-				if (new_type == T_LAND && (type & T_LAND))
+				if (new_type == T_LAND && (type & T_LAND)) {
 					add_cell(pmap, new_loc, landp, new_type,
 					         cur_cost, inc_lcost);
-				else if (new_type == T_WATER &&
-				         (type & T_WATER))
+				} else if (new_type == T_WATER &&
+				           (type & T_WATER)) {
 					add_cell(pmap, new_loc, waterp,
 					         new_type, cur_cost, inc_wcost);
-				else if (new_type ==
-				         T_UNKNOWN) { /* unreachable cell? */
+				} else if (new_type ==
+				           T_UNKNOWN) { /* unreachable cell? */
 					pm->terrain = new_type;
 					pm->cost = cur_cost + INFINITY / 2;
 					pm->inc_cost = INFINITY / 2;
@@ -572,6 +586,7 @@ expand_perimeter(path_map_t *pmap, view_map_t *vmap, move_info_t *move_info,
 				}
 			}
 		}
+	}
 }
 
 /* Add a cell to a perimeter list. */
@@ -606,27 +621,31 @@ static int objective_cost(view_map_t *vmap, move_info_t *move_info, loc_t loc,
 	city_info_t *cityp;
 
 	p = strchr(move_info->objectives, vmap[loc].contents);
-	if (!p)
+	if (!p) {
 		return INFINITY;
+	}
 
 	w = move_info->weights[p - move_info->objectives];
-	if (w >= 0)
+	if (w >= 0) {
 		return w + base_cost;
+	}
 
 	switch (w) {
 	case W_TT_BUILD:
 		/* handle special case of moving to tt building city */
 		cityp = find_city(loc);
-		if (!cityp)
+		if (!cityp) {
 			return base_cost + 2; /* tt is already here */
-		if (cityp->prod != TRANSPORT)
+		}
+		if (cityp->prod != TRANSPORT) {
 			return base_cost + 2; /* just finished a tt */
-
+		}
 		/* compute time to wait for tt to be built */
 		w = piece_attr[TRANSPORT].build_time - cityp->work;
 		w *= 2; /* had to cross land to get here */
-		if (w < base_cost + 2)
+		if (w < base_cost + 2) {
 			w = base_cost + 2;
+		}
 		return w;
 
 	default:
@@ -642,14 +661,18 @@ Return the type of terrain at a vmap location.
 
 static int terrain_type(path_map_t *pmap, view_map_t *vmap,
                         move_info_t *move_info, loc_t from_loc, loc_t to_loc) {
-	if (vmap[to_loc].contents == MAP_LAND)
+	if (vmap[to_loc].contents == MAP_LAND) {
 		return T_LAND;
-	if (vmap[to_loc].contents == MAP_SEA)
+	}
+	if (vmap[to_loc].contents == MAP_SEA) {
 		return T_WATER;
-	if (vmap[to_loc].contents == '%')
+	}
+	if (vmap[to_loc].contents == '%') {
 		return T_UNKNOWN; /* magic objective */
-	if (vmap[to_loc].contents == ' ')
+	}
+	if (vmap[to_loc].contents == ' ') {
 		return pmap[from_loc].terrain;
+	}
 
 	switch (game.real_map[to_loc].contents) {
 	case MAP_SEA:
@@ -657,10 +680,12 @@ static int terrain_type(path_map_t *pmap, view_map_t *vmap,
 	case MAP_LAND:
 		return T_LAND;
 	case MAP_CITY:
-		if (game.real_map[to_loc].cityp->owner == move_info->city_owner)
+		if (game.real_map[to_loc].cityp->owner ==
+		    move_info->city_owner) {
 			return T_WATER;
-		else
+		} else {
 			return T_UNKNOWN; /* cannot cross */
+		}
 	}
 	ABORT;
 	/*NOTREACHED*/
@@ -713,20 +738,21 @@ void vmap_prune_explore_locs(view_map_t *vmap) {
 
 	/* build initial path map and perimeter list */
 	for (loc = 0; loc < MAP_SIZE; loc++) {
-		if (vmap[loc].contents != ' ')
+		if (vmap[loc].contents != ' ') {
 			explored += 1;
-		else { /* add unexplored cell to perim */
+		} else { /* add unexplored cell to perim */
 			FOR_ADJ(loc, new_loc, i) {
-				if (new_loc < 0 || new_loc >= MAP_SIZE)
+				if (new_loc < 0 || new_loc >= MAP_SIZE) {
 					; /* ignore off map */
-				else if (vmap[new_loc].contents == ' ')
+				} else if (vmap[new_loc].contents == ' ') {
 					; /* ignore adjacent unexplored */
-				else if (game.real_map[new_loc].contents !=
-				         MAP_SEA)
+				} else if (game.real_map[new_loc].contents !=
+				           MAP_SEA) {
 					pmap[loc].cost += 1; /* count land */
-				else
+				} else {
 					pmap[loc].inc_cost +=
 					    1; /* count water */
+				}
 			}
 			if (pmap[loc].cost || pmap[loc].inc_cost) {
 				from->list[from->len] = loc;
@@ -735,82 +761,89 @@ void vmap_prune_explore_locs(view_map_t *vmap) {
 		}
 	}
 
-	if (game.print_vmap == 'I')
+	if (game.print_vmap == 'I') {
 		print_xzoom(vmap);
+	}
 
 	for (;;) { /* do high probability predictions */
-		if (from->len + explored == MAP_SIZE)
+		if (from->len + explored == MAP_SIZE) {
 			return;
+		}
 		to->len = 0;
 		copied = 0;
 
 		for (i = 0; i < from->len; i++) {
 			loc = from->list[i];
-			if (pmap[loc].cost >= 5)
+			if (pmap[loc].cost >= 5) {
 				expand_prune(vmap, pmap, loc, T_LAND, to,
 				             &explored);
-			else if (pmap[loc].inc_cost >= 5)
+			} else if (pmap[loc].inc_cost >= 5) {
 				expand_prune(vmap, pmap, loc, T_WATER, to,
 				             &explored);
-			else if ((loc < MAP_WIDTH ||
-			          loc >= MAP_SIZE - MAP_WIDTH) &&
-			         pmap[loc].cost >= 3)
+			} else if ((loc < MAP_WIDTH ||
+			            loc >= MAP_SIZE - MAP_WIDTH) &&
+			           pmap[loc].cost >= 3) {
 				expand_prune(vmap, pmap, loc, T_LAND, to,
 				             &explored);
-			else if ((loc < MAP_WIDTH ||
-			          loc >= MAP_SIZE - MAP_WIDTH) &&
-			         pmap[loc].inc_cost >= 3)
+			} else if ((loc < MAP_WIDTH ||
+			            loc >= MAP_SIZE - MAP_WIDTH) &&
+			           pmap[loc].inc_cost >= 3) {
 				expand_prune(vmap, pmap, loc, T_WATER, to,
 				             &explored);
-			else if ((loc == 0 || loc == MAP_SIZE - 1) &&
-			         pmap[loc].cost >= 2)
+			} else if ((loc == 0 || loc == MAP_SIZE - 1) &&
+			           pmap[loc].cost >= 2) {
 				expand_prune(vmap, pmap, loc, T_LAND, to,
 				             &explored);
-			else if ((loc == 0 || loc == MAP_SIZE - 1) &&
-			         pmap[loc].inc_cost >= 2)
+			} else if ((loc == 0 || loc == MAP_SIZE - 1) &&
+			           pmap[loc].inc_cost >= 2) {
 				expand_prune(vmap, pmap, loc, T_WATER, to,
 				             &explored);
-			else { /* copy perimeter cell */
+			} else { /* copy perimeter cell */
 				to->list[to->len] = loc;
 				to->len += 1;
 				copied += 1;
 			}
 		}
-		if (copied == from->len)
+		if (copied == from->len) {
 			break; /* nothing expanded */
+		}
 		SWAP(from, to);
 	}
 
-	if (game.print_vmap == 'I')
+	if (game.print_vmap == 'I') {
 		print_xzoom(vmap);
+	}
 
 	/* one pass for medium probability predictions */
-	if (from->len + explored == MAP_SIZE)
+	if (from->len + explored == MAP_SIZE) {
 		return;
+	}
 	to->len = 0;
 
 	for (i = 0; i < from->len; i++) {
 		loc = from->list[i];
-		if (pmap[loc].cost > pmap[loc].inc_cost)
+		if (pmap[loc].cost > pmap[loc].inc_cost) {
 			expand_prune(vmap, pmap, loc, T_LAND, to, &explored);
-		else if (pmap[loc].cost < pmap[loc].inc_cost)
+		} else if (pmap[loc].cost < pmap[loc].inc_cost) {
 			expand_prune(vmap, pmap, loc, T_WATER, to, &explored);
-		else { /* copy perimeter cell */
+		} else { /* copy perimeter cell */
 			to->list[to->len] = loc;
 			to->len += 1;
 		}
 	}
 	SWAP(from, to);
 
-	if (game.print_vmap == 'I')
+	if (game.print_vmap == 'I') {
 		print_xzoom(vmap);
+	}
 
 	/* multiple low probability passes */
 	for (;;) {
 		/* return if very little left to explore */
 		if (from->len + explored >= MAP_SIZE - MAP_HEIGHT) {
-			if (game.print_vmap == 'I')
+			if (game.print_vmap == 'I') {
 				print_xzoom(vmap);
+			}
 			return;
 		}
 		to->len = 0;
@@ -818,34 +851,37 @@ void vmap_prune_explore_locs(view_map_t *vmap) {
 
 		for (i = 0; i < from->len; i++) {
 			loc = from->list[i];
-			if (pmap[loc].cost >= 4 && pmap[loc].inc_cost < 4)
+			if (pmap[loc].cost >= 4 && pmap[loc].inc_cost < 4) {
 				expand_prune(vmap, pmap, loc, T_LAND, to,
 				             &explored);
-			else if (pmap[loc].inc_cost >= 4 && pmap[loc].cost < 4)
+			} else if (pmap[loc].inc_cost >= 4 &&
+			           pmap[loc].cost < 4) {
 				expand_prune(vmap, pmap, loc, T_WATER, to,
 				             &explored);
-			else if ((loc < MAP_WIDTH ||
-			          loc >= MAP_SIZE - MAP_WIDTH) &&
-			         pmap[loc].cost > pmap[loc].inc_cost)
+			} else if ((loc < MAP_WIDTH ||
+			            loc >= MAP_SIZE - MAP_WIDTH) &&
+			           pmap[loc].cost > pmap[loc].inc_cost) {
 				expand_prune(vmap, pmap, loc, T_LAND, to,
 				             &explored);
-			else if ((loc < MAP_WIDTH ||
-			          loc >= MAP_SIZE - MAP_WIDTH) &&
-			         pmap[loc].inc_cost > pmap[loc].cost)
+			} else if ((loc < MAP_WIDTH ||
+			            loc >= MAP_SIZE - MAP_WIDTH) &&
+			           pmap[loc].inc_cost > pmap[loc].cost) {
 				expand_prune(vmap, pmap, loc, T_WATER, to,
 				             &explored);
-			else { /* copy perimeter cell */
+			} else { /* copy perimeter cell */
 				to->list[to->len] = loc;
 				to->len += 1;
 				copied += 1;
 			}
 		}
-		if (copied == from->len)
+		if (copied == from->len) {
 			break; /* nothing expanded */
+		}
 		SWAP(from, to);
 	}
-	if (game.print_vmap == 'I')
+	if (game.print_vmap == 'I') {
 		print_xzoom(vmap);
+	}
 }
 
 /*
@@ -864,10 +900,11 @@ static void expand_prune(view_map_t *vmap, path_map_t *pmap, loc_t loc,
 
 	*explored += 1;
 
-	if (type == T_LAND)
+	if (type == T_LAND) {
 		vmap[loc].contents = MAP_LAND;
-	else
+	} else {
 		vmap[loc].contents = MAP_SEA;
+	}
 
 	FOR_ADJ(loc, new_loc, i)
 	if (new_loc >= 0 && new_loc < MAP_SIZE &&
@@ -876,10 +913,11 @@ static void expand_prune(view_map_t *vmap, path_map_t *pmap, loc_t loc,
 			to->list[to->len] = new_loc;
 			to->len += 1;
 		}
-		if (type == T_LAND)
+		if (type == T_LAND) {
 			pmap[new_loc].cost += 1;
-		else
+		} else {
 			pmap[new_loc].inc_cost += 1;
+		}
 	}
 }
 
@@ -915,10 +953,11 @@ loc_t vmap_find_dest(path_map_t path_map[], view_map_t vmap[], loc_t cur_loc,
 	from = &p1;
 	to = &p2;
 
-	if (terrain == T_AIR)
+	if (terrain == T_AIR) {
 		start_terrain = T_LAND;
-	else
+	} else {
 		start_terrain = terrain;
+	}
 
 	start_perimeter(path_map, from, cur_loc, start_terrain);
 	cur_cost = 0; /* cost to reach current perimeter */
@@ -955,18 +994,20 @@ void vmap_mark_path(path_map_t *path_map, view_map_t *vmap, loc_t dest) {
 	int n;
 	loc_t new_dest;
 
-	if (path_map[dest].cost == 0)
+	if (path_map[dest].cost == 0) {
 		return; /* reached end of path */
-	if (path_map[dest].terrain == T_PATH)
+	}
+	if (path_map[dest].terrain == T_PATH) {
 		return; /* already marked */
-
+	}
 	path_map[dest].terrain = T_PATH; /* this square is on path */
 
 	/* loop to mark adjacent squares on shortest path */
 	FOR_ADJ(dest, new_dest, n)
 	if (path_map[new_dest].cost ==
-	    path_map[dest].cost - path_map[dest].inc_cost)
+	    path_map[dest].cost - path_map[dest].inc_cost) {
 		vmap_mark_path(path_map, vmap, new_dest);
+	}
 }
 
 /*
@@ -1003,9 +1044,11 @@ void vmap_mark_near_path(path_map_t path_map[], loc_t loc) {
 			break;
 		}
 	}
-	for (i = 0; i < 8; i++)
-		if (hit_loc[i])
+	for (i = 0; i < 8; i++) {
+		if (hit_loc[i]) {
 			path_map[loc + dir_offset[i]].terrain = T_PATH;
+		}
+	}
 }
 
 /*
@@ -1044,8 +1087,9 @@ loc_t vmap_find_dir(path_map_t path_map[], view_map_t *vmap, loc_t loc,
 	int path_count, bestpath;
 	char *p;
 
-	if (game.trace_pmap)
+	if (game.trace_pmap) {
 		print_pzoom("Before vmap_find_dir:", path_map, vmap);
+	}
 
 	bestcount = -INFINITY; /* no best yet */
 	bestpath = -1;
@@ -1094,15 +1138,16 @@ int vmap_count_adjacent(view_map_t *vmap, loc_t loc, char *adj_char) {
 
 	FOR_ADJ_ON(loc, new_loc, i) {
 		p = strchr(adj_char, vmap[new_loc].contents);
-		if (p)
+		if (p) {
 			count += 8 * (len - (p - adj_char));
+		}
 	}
 	return (count);
 }
 
 /*
-Count the number of adjacent cells that are on the path.
-*/
+   Count the number of adjacent cells that are on the path.
+ */
 
 int vmap_count_path(path_map_t *pmap, loc_t loc) {
 	int i, count;
@@ -1111,8 +1156,9 @@ int vmap_count_path(path_map_t *pmap, loc_t loc) {
 	count = 0;
 
 	FOR_ADJ_ON(loc, new_loc, i)
-	if (pmap[new_loc].terrain == T_PATH)
+	if (pmap[new_loc].terrain == T_PATH) {
 		count += 1;
+	}
 
 	return (count);
 }
@@ -1126,8 +1172,9 @@ bool rmap_shore(loc_t loc) {
 	loc_t i, j;
 
 	FOR_ADJ_ON(loc, j, i)
-	if (game.real_map[j].contents == MAP_SEA)
+	if (game.real_map[j].contents == MAP_SEA) {
 		return (true);
+	}
 
 	return (false);
 }
@@ -1137,8 +1184,9 @@ bool vmap_shore(view_map_t *vmap, loc_t loc) {
 
 	FOR_ADJ_ON(loc, j, i)
 	if (vmap[j].contents != ' ' && vmap[j].contents != MAP_LAND &&
-	    game.real_map[j].contents == MAP_SEA)
+	    game.real_map[j].contents == MAP_SEA) {
 		return (true);
+	}
 
 	return (false);
 }
@@ -1151,12 +1199,14 @@ which cannot be moved to are treated as ocean.
 bool vmap_at_sea(view_map_t *vmap, loc_t loc) {
 	loc_t i, j;
 
-	if (game.real_map[loc].contents != MAP_SEA)
+	if (game.real_map[loc].contents != MAP_SEA) {
 		return (false);
+	}
 	FOR_ADJ_ON(loc, j, i)
 	if (vmap[j].contents == ' ' || vmap[j].contents == MAP_LAND ||
-	    game.real_map[j].contents != MAP_SEA)
+	    game.real_map[j].contents != MAP_SEA) {
 		return (false);
+	}
 
 	return (true);
 }
@@ -1164,11 +1214,13 @@ bool vmap_at_sea(view_map_t *vmap, loc_t loc) {
 bool rmap_at_sea(loc_t loc) {
 	loc_t i, j;
 
-	if (game.real_map[loc].contents != MAP_SEA)
+	if (game.real_map[loc].contents != MAP_SEA) {
 		return (false);
+	}
 	FOR_ADJ_ON(loc, j, i) {
-		if (game.real_map[j].contents != MAP_SEA)
+		if (game.real_map[j].contents != MAP_SEA) {
 			return (false);
+		}
 	}
 	return (true);
 }

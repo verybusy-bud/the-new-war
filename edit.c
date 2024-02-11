@@ -135,11 +135,13 @@ char e_cursor(loc_t *edit_cursor) {
 	for (;;) {
 		int p;
 		p = direction(e);
-		if (p == -1)
+		if (p == -1) {
 			break;
+		}
 
-		if (!move_cursor(edit_cursor, dir_offset[p]))
+		if (!move_cursor(edit_cursor, dir_offset[p])) {
 			(void)beep();
+		}
 
 		(void)refresh();
 		e = getch();
@@ -207,17 +209,19 @@ Put a ship in fill mode.
 
 void e_fill(loc_t loc) {
 	if (game.user_map[loc].contents == 'T' ||
-	    game.user_map[loc].contents == 'C')
+	    game.user_map[loc].contents == 'C') {
 		e_set_func(loc, FILL);
-	else
+	} else {
 		huh();
+	}
 }
 
 void e_city_fill(city_info_t *cityp, int type) {
-	if (type == TRANSPORT || type == CARRIER)
+	if (type == TRANSPORT || type == CARRIER) {
 		e_set_city_func(cityp, type, FILL);
-	else
+	} else {
 		huh();
+	}
 }
 
 /*
@@ -235,10 +239,11 @@ Set a fighter to land.
 */
 
 void e_land(loc_t loc) {
-	if (game.user_map[loc].contents == 'F')
+	if (game.user_map[loc].contents == 'F') {
 		e_set_func(loc, LAND);
-	else
+	} else {
 		huh();
+	}
 }
 
 /*
@@ -246,10 +251,11 @@ Set an army's function to TRANSPORT.
 */
 
 void e_transport(loc_t loc) {
-	if (game.user_map[loc].contents == 'A')
+	if (game.user_map[loc].contents == 'A') {
 		e_set_func(loc, WFTRANSPORT);
-	else
+	} else {
 		huh();
+	}
 }
 
 /*
@@ -257,17 +263,19 @@ Set an army's function to ATTACK.
 */
 
 void e_attack(loc_t loc) {
-	if (game.user_map[loc].contents == 'A')
+	if (game.user_map[loc].contents == 'A') {
 		e_set_func(loc, ARMYATTACK);
-	else
+	} else {
 		huh();
+	}
 }
 
 void e_city_attack(city_info_t *cityp, int type) {
-	if (type == ARMY)
+	if (type == ARMY) {
 		e_set_city_func(cityp, type, ARMYATTACK);
-	else
+	} else {
 		huh();
+	}
 }
 
 /*
@@ -275,17 +283,19 @@ Set a ship's function to REPAIR.
 */
 
 void e_repair(loc_t loc) {
-	if (strchr("PDSTBC", game.user_map[loc].contents))
+	if (strchr("PDSTBC", game.user_map[loc].contents)) {
 		e_set_func(loc, REPAIR);
-	else
+	} else {
 		huh();
+	}
 }
 
 void e_city_repair(city_info_t *cityp, int type) {
-	if (type == ARMY || type == FIGHTER || type == SATELLITE)
+	if (type == ARMY || type == FIGHTER || type == SATELLITE) {
 		huh();
-	else
+	} else {
 		e_set_city_func(cityp, type, REPAIR);
+	}
 }
 
 /*
@@ -295,18 +305,19 @@ Set object to move in a direction.
 static char dirs[] = "WEDCXZAQ";
 
 void e_stasis(loc_t loc) {
-	if (!isupper(game.user_map[loc].contents))
+	if (!isupper(game.user_map[loc].contents)) {
 		huh(); /* no object here */
-	else if (game.user_map[loc].contents == 'X')
+	} else if (game.user_map[loc].contents == 'X') {
 		huh();
-	else {
+	} else {
 		char e = get_chx(); /* get a direction */
 		char *p = strchr(dirs, e);
 
-		if (p == NULL)
+		if (p == NULL) {
 			huh();
-		else
+		} else {
 			e_set_func(loc, (long)(MOVE_N - (p - dirs)));
+		}
 	}
 }
 
@@ -317,10 +328,11 @@ void e_city_stasis(city_info_t *cityp, int type) {
 	e = get_chx(); /* get a direction */
 	p = strchr(dirs, e);
 
-	if (p == NULL)
+	if (p == NULL) {
 		huh();
-	else
+	} else {
 		e_set_city_func(cityp, type, (long)(MOVE_N - (p - dirs)));
+	}
 }
 
 /*
@@ -334,12 +346,14 @@ void e_wake(loc_t loc) {
 	cityp = find_city(loc);
 	if (cityp != NULL) {
 		int i;
-		for (i = 0; i < NUM_OBJECTS; i++)
+		for (i = 0; i < NUM_OBJECTS; i++) {
 			cityp->func[i] = NOFUNC;
+		}
 	}
 	for (obj = game.real_map[loc].objp; obj != NULL;
-	     obj = obj->loc_link.next)
+	     obj = obj->loc_link.next) {
 		obj->func = NOFUNC;
+	}
 }
 
 void e_city_wake(city_info_t *cityp, int type) {
@@ -407,12 +421,13 @@ Beginning of move to location.
 */
 
 void e_move(loc_t *path_start, loc_t loc) {
-	if (!isupper(game.user_map[loc].contents))
+	if (!isupper(game.user_map[loc].contents)) {
 		huh(); /* nothing there? */
-	else if (game.user_map[loc].contents == 'X')
+	} else if (game.user_map[loc].contents == 'X') {
 		huh(); /* enemy city? */
-	else
+	} else {
 		*path_start = loc;
+	}
 }
 
 /*
@@ -420,11 +435,11 @@ End of move to location.
 */
 
 void e_end(loc_t *path_start, loc_t loc, int path_type) {
-	if (*path_start == -1)
+	if (*path_start == -1) {
 		huh(); /* no path started? */
-	else if (path_type == NOPIECE)
+	} else if (path_type == NOPIECE) {
 		e_set_func(*path_start, loc);
-	else {
+	} else {
 		city_info_t *cityp = find_city(*path_start);
 		ASSERT(cityp != NULL);
 		e_set_city_func(cityp, path_type, loc);
@@ -438,10 +453,11 @@ Put a piece to sleep.
 */
 
 void e_sleep(loc_t loc) {
-	if (game.user_map[loc].contents == 'O')
+	if (game.user_map[loc].contents == 'O') {
 		huh(); /* can't sleep a city */
-	else
+	} else {
 		e_set_func(loc, SENTRY);
+	}
 }
 
 /*
@@ -455,16 +471,17 @@ void e_info(loc_t edit_cursor) {
 
 	ab = game.user_map[edit_cursor].contents;
 
-	if (ab == 'O')
+	if (ab == 'O') {
 		e_city_info(edit_cursor);
-	else if (ab == 'X' && game.debug)
+	} else if (ab == 'X' && game.debug) {
 		e_city_info(edit_cursor);
-	else if ((ab >= 'A') && (ab <= 'T'))
+	} else if ((ab >= 'A') && (ab <= 'T')) {
 		e_piece_info(edit_cursor, ab);
-	else if ((ab >= 'a') && (ab <= 't') && (game.debug))
+	} else if ((ab >= 'a') && (ab <= 't') && (game.debug)) {
 		e_piece_info(edit_cursor, ab);
-	else
+	} else {
 		huh();
+	}
 }
 
 /*
@@ -501,27 +518,32 @@ void e_city_info(loc_t edit_cursor) {
 
 	f = 0; /* no fighters counted yet */
 	for (obj = game.real_map[edit_cursor].objp; obj != NULL;
-	     obj = obj->loc_link.next)
-		if (obj->type == FIGHTER)
+	     obj = obj->loc_link.next) {
+		if (obj->type == FIGHTER) {
 			f++;
+		}
+	}
 
 	s = 0; /* no ships counted yet */
 	for (obj = game.real_map[edit_cursor].objp; obj != NULL;
-	     obj = obj->loc_link.next)
-		if (obj->type >= DESTROYER)
+	     obj = obj->loc_link.next) {
+		if (obj->type >= DESTROYER) {
 			s++;
+		}
+	}
 
-	if (f == 1 && s == 1)
+	if (f == 1 && s == 1) {
 		(void)sprintf(game.jnkbuf, "1 fighter landed, 1 ship docked");
-	else if (f == 1)
+	} else if (f == 1) {
 		(void)sprintf(game.jnkbuf, "1 fighter landed, %d ships docked",
 		              s);
-	else if (s == 1)
+	} else if (s == 1) {
 		(void)sprintf(game.jnkbuf, "%d fighters landed, 1 ship docked",
 		              f);
-	else
+	} else {
 		(void)sprintf(game.jnkbuf,
 		              "%d fighters landed, %d ships docked", f, s);
+	}
 
 	cityp = find_city(edit_cursor);
 	ASSERT(cityp != NULL);
@@ -529,12 +551,13 @@ void e_city_info(loc_t edit_cursor) {
 	*func_buf = 0;                      /* nothing in buffer */
 	for (s = 0; s < NUM_OBJECTS; s++) { /* for each piece */
 		// cppcheck-suppress nullPointerRedundantCheck
-		if (cityp->func[s] < 0)
+		if (cityp->func[s] < 0) {
 			(void)sprintf(temp_buf, "%c:%s; ", piece_attr[s].sname,
 			              func_name[FUNCI(cityp->func[s])]);
-		else
+		} else {
 			(void)sprintf(temp_buf, "%c: %d;", piece_attr[s].sname,
 			              loc_disp(cityp->func[s]));
+		}
 
 		(void)strcat(func_buf, temp_buf);
 	}
@@ -556,10 +579,11 @@ void e_prod(loc_t loc) {
 
 	cityp = find_city(loc);
 
-	if (cityp == NULL)
+	if (cityp == NULL) {
 		huh(); /* no city? */
-	else
+	} else {
 		set_prod(cityp);
+	}
 }
 
 /*

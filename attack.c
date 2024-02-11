@@ -126,8 +126,9 @@ void attack_obj(piece_info_t *att_obj, loc_t loc) {
 void attack(piece_info_t *att_obj, loc_t loc) {
 	if (game.real_map[loc].contents == MAP_CITY) /* attacking a city? */ {
 		attack_city(att_obj, loc);
-	} else
+	} else {
 		attack_obj(att_obj, loc); /* attacking a piece */
+	}
 }
 
 /*
@@ -169,7 +170,7 @@ void describe(piece_info_t *win_obj, piece_info_t *lose_obj, loc_t loc) {
 			       piece_attr[win_obj->type].name, win_obj->hits);
 
 			diff = win_obj->count - obj_capacity(win_obj);
-			if (diff > 0)
+			if (diff > 0) {
 				switch (win_obj->cargo->type) {
 				case ARMY:
 					ksend("%d armies fell overboard and "
@@ -190,6 +191,7 @@ void describe(piece_info_t *win_obj, piece_info_t *lose_obj, loc_t loc) {
 					       diff);
 					break;
 				}
+			}
 		} else {
 			game.comp_score +=
 			    piece_attr[lose_obj->type].build_time;

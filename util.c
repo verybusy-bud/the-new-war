@@ -108,8 +108,9 @@ void check(void) {
 	   have a good owner, and good hits. */
 
 	for (i = 0; i < MAP_SIZE; i++) {
-		if (game.real_map[i].cityp)
+		if (game.real_map[i].cityp) {
 			ASSERT(game.real_map[i].cityp->loc == i);
+		}
 
 		for (p = game.real_map[i].objp; p != NULL;
 		     p = p->loc_link.next) {
@@ -175,7 +176,7 @@ void check_obj(piece_info_t **list, int owner) {
 	long i, j;
 	piece_info_t *p;
 
-	for (i = 0; i < NUM_OBJECTS; i++)
+	for (i = 0; i < NUM_OBJECTS; i++) {
 		for (p = list[i]; p != NULL; p = p->piece_link.next) {
 			ASSERT(p->owner == owner);
 			ASSERT(p->type == i);
@@ -190,6 +191,7 @@ void check_obj(piece_info_t **list, int owner) {
 				       p);
 			}
 		}
+	}
 }
 
 /*
@@ -252,8 +254,9 @@ void check_obj_cargo(piece_info_t **list) {
 
 	for (i = 0; i < NUM_OBJECTS; i++) {
 		for (p = list[i]; p != NULL; p = p->piece_link.next) {
-			if (p->ship)
+			if (p->ship) {
 				ASSERT(in_cargo[p - game.object]);
+			}
 		}
 	}
 }

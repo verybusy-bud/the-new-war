@@ -71,8 +71,9 @@ void init_game(void) {
 
 	do {
 		for (i = 0; i < MAP_SIZE; i++) { /* remove cities */
-			if (game.real_map[i].contents == MAP_CITY)
+			if (game.real_map[i].contents == MAP_CITY) {
 				game.real_map[i].contents = MAP_LAND; /* land */
+			}
 		}
 		place_cities();     /* place cities on game.real_map */
 	} while (!select_cities()); /* choose a city for each player */
@@ -103,8 +104,10 @@ void make_map(void) {
 	count_t i, j, sum;
 	loc_t loc;
 
-	for (i = 0; i < MAP_SIZE; i++) /* fill game.real_map with random sand */
+	for (i = 0; i < MAP_SIZE;
+	     i++) { /* fill game.real_map with random sand */
 		height[0][i] = irand(MAX_HEIGHT);
+	}
 
 	from = 0;
 	to = 1;
@@ -114,8 +117,9 @@ void make_map(void) {
 			for (k = 0; k < 8; k++) {
 				loc = j + dir_offset[k];
 				/* edges get smoothed in a wierd fashion */
-				if (loc < 0 || loc >= MAP_SIZE)
+				if (loc < 0 || loc >= MAP_SIZE) {
 					loc = j;
+				}
 				sum += height[from][loc];
 			}
 			height[to][j] = sum / 9;
@@ -126,11 +130,13 @@ void make_map(void) {
 	}
 
 	/* count the number of cells at each height */
-	for (i = 0; i <= MAX_HEIGHT; i++)
+	for (i = 0; i <= MAX_HEIGHT; i++) {
 		height_count[i] = 0;
+	}
 
-	for (i = 0; i <= MAP_SIZE; i++)
+	for (i = 0; i <= MAP_SIZE; i++) {
 		height_count[height[from][i]]++;
+	}
 
 	/* find the water line */
 	loc = MAX_HEIGHT; /* default to all water */
@@ -146,10 +152,11 @@ void make_map(void) {
 
 	/* mark the land and water */
 	for (i = 0; i < MAP_SIZE; i++) {
-		if (height[from][i] > loc)
+		if (height[from][i] > loc) {
 			game.real_map[i].contents = MAP_LAND;
-		else
+		} else {
 			game.real_map[i].contents = MAP_SEA;
+		}
 
 		game.real_map[i].objp = NULL; /* nothing in cell yet */
 		game.real_map[i].cityp = NULL;
@@ -185,8 +192,9 @@ void place_cities(void) {
 		count_t i;
 		loc_t loc;
 
-		while (num_land == 0)
+		while (num_land == 0) {
 			num_land = regen_land(placed);
+		}
 		i = irand(num_land - 1); /* select random piece of land */
 		loc = land[i];
 
@@ -195,9 +203,9 @@ void place_cities(void) {
 		game.city[placed].work = 0;
 		game.city[placed].prod = NOPIECE;
 
-		for (i = 0; i < NUM_OBJECTS; i++)
+		for (i = 0; i < NUM_OBJECTS; i++) {
 			game.city[placed].func[i] = NOFUNC; /* no function */
-
+		}
 		game.real_map[loc].contents = MAP_CITY;
 		game.real_map[loc].cityp = &(game.city[placed]);
 		placed++;
@@ -311,9 +319,9 @@ bool select_cities(void) {
 	int pair;
 
 	find_cont(); /* find and rank the continents */
-	if (ncont == 0)
+	if (ncont == 0) {
 		return (false); /* there are no good continents */
-
+	}
 	make_pair(); /* create list of ranked pairs */
 
 	(void)sprintf(
@@ -358,15 +366,17 @@ void find_cont(void) {
 	loc_t i;
 	loc_t mapi;
 
-	for (i = 0; i < MAP_SIZE; i++)
+	for (i = 0; i < MAP_SIZE; i++) {
 		marked[i] = 0; /* nothing marked yet */
-
+	}
 	ncont = 0; /* no continents found yet */
 	mapi = 0;
 
-	while (ncont < MAX_CONT)
-		if (!find_next(&mapi))
+	while (ncont < MAX_CONT) {
+		if (!find_next(&mapi)) {
 			return; /* all found */
+		}
+	}
 }
 
 /*
@@ -379,13 +389,14 @@ bool find_next(loc_t *mapi) {
 	long val;
 
 	for (;;) {
-		if (*mapi >= MAP_SIZE)
+		if (*mapi >= MAP_SIZE) {
 			return (false);
+		}
 
 		if (!game.real_map[*mapi].on_board || marked[*mapi] ||
-		    game.real_map[*mapi].contents == MAP_SEA)
+		    game.real_map[*mapi].contents == MAP_SEA) {
 			*mapi += 1;
-		else if (good_cont(*mapi)) {
+		} else if (good_cont(*mapi)) {
 			rank_tab[ncont] = ncont; /* insert cont in rank tab */
 			val = cont_tab[ncont].value;
 
@@ -393,8 +404,9 @@ bool find_next(loc_t *mapi) {
 				if (val > cont_tab[rank_tab[i - 1]].value) {
 					rank_tab[i] = rank_tab[i - 1];
 					rank_tab[i - 1] = ncont;
-				} else
+				} else {
 					break;
+				}
 			}
 			ncont++; /* count continents */
 			return (true);
@@ -421,18 +433,20 @@ bool good_cont(loc_t mapi) {
 
 	mark_cont(mapi);
 
-	if (nshore < 1 || ncity < 2)
+	if (nshore < 1 || ncity < 2) {
 		return (false);
+	}
 
 	/* The first two cities, one of which must be a shore city,
 	   don't contribute to the value.  Otherwise shore cities are
 	   worth 3/2 an inland city.  A city is worth 1000 times as much
 	   as land area. */
 
-	if (ncity == nshore)
+	if (ncity == nshore) {
 		val = (nshore - 2) * 3;
-	else
+	} else {
 		val = (nshore - 1) * 3 + (ncity - nshore - 1) * 2;
+	}
 
 	val *= 1000; /* cities are worth a lot */
 	val += nland;
@@ -452,8 +466,9 @@ static void mark_cont(loc_t mapi) {
 	int i;
 
 	if (marked[mapi] || game.real_map[mapi].contents == MAP_SEA ||
-	    !game.real_map[mapi].on_board)
+	    !game.real_map[mapi].on_board) {
 		return;
+	}
 
 	marked[mapi] = 1; /* mark this cell seen */
 	nland++;          /* count land on continent */
@@ -461,12 +476,14 @@ static void mark_cont(loc_t mapi) {
 	if (game.real_map[mapi].contents == MAP_CITY) { /* a city? */
 		cont_tab[ncont].cityp[ncity] = game.real_map[mapi].cityp;
 		ncity++;
-		if (rmap_shore(mapi))
+		if (rmap_shore(mapi)) {
 			nshore++;
+		}
 	}
 
-	for (i = 0; i < 8; i++) /* look at surrounding squares */
+	for (i = 0; i < 8; i++) { /* look at surrounding squares */
 		mark_cont(mapi + dir_offset[i]);
+	}
 }
 
 /*
@@ -482,7 +499,7 @@ void make_pair(void) {
 
 	npair = 0; /* none yet */
 
-	for (i = 0; i < ncont; i++)
+	for (i = 0; i < ncont; i++) {
 		for (j = 0; j < ncont; j++) { /* loop through all continents */
 			val = cont_tab[i].value - cont_tab[j].value;
 			pair_tab[npair].value = val;
@@ -502,6 +519,7 @@ void make_pair(void) {
 			}
 			npair++; /* count pairs */
 		}
+	}
 }
 
 /*
@@ -628,8 +646,9 @@ int restore_game(void) {
 		game.user_obj[i] = NULL;
 	}
 	/* put cities on game.real_map */
-	for (i = 0; i < NUM_CITY; i++)
+	for (i = 0; i < NUM_CITY; i++) {
 		game.real_map[game.city[i].loc].cityp = &(game.city[i]);
+	}
 
 	/* put pieces in free list or on map and in object lists */
 	for (i = 0; i < LIST_SIZE; i++) {
@@ -671,8 +690,9 @@ void read_embark(piece_info_t *list, int piece_type) {
 
 	for (ship = list; ship != NULL; ship = ship->piece_link.next) {
 		int count = ship->count; /* get # of pieces we need */
-		if (count < 0)
+		if (count < 0) {
 			inconsistent();
+		}
 		ship->count = 0; /* nothing on board yet */
 		for (obj = game.real_map[ship->loc].objp; obj && count;
 		     obj = obj->loc_link.next) {
@@ -681,8 +701,9 @@ void read_embark(piece_info_t *list, int piece_type) {
 				count -= 1;
 			}
 		}
-		if (count)
+		if (count) {
 			inconsistent();
+		}
 	}
 }
 
@@ -752,17 +773,18 @@ void save_movie_screen(void) {
 	}
 
 	for (i = 0; i < MAP_SIZE; i++) {
-		if (game.real_map[i].cityp)
+		if (game.real_map[i].cityp) {
 			mapbuf[i] = city_char[game.real_map[i].cityp->owner];
-		else {
+		} else {
 			p = find_obj_at_loc(i);
 
-			if (!p)
+			if (!p) {
 				mapbuf[i] = game.real_map[i].contents;
-			else if (p->owner == USER)
+			} else if (p->owner == USER) {
 				mapbuf[i] = piece_attr[p->type].sname;
-			else
+			} else {
 				mapbuf[i] = tolower(piece_attr[p->type].sname);
+			}
 		}
 	}
 	wbuf(mapbuf);
@@ -791,8 +813,9 @@ void replay_movie(void) {
 	for (;;) {
 		int row_inc, col_inc;
 		if (fread((char *)mapbuf, 1, sizeof(mapbuf), f) !=
-		    sizeof(mapbuf))
+		    sizeof(mapbuf)) {
 			break;
+		}
 		round += 1;
 
 		stat_display(mapbuf, round);
@@ -801,10 +824,12 @@ void replay_movie(void) {
 		          (game.lines - NUMTOPS);
 		col_inc = (MAP_WIDTH + game.cols - 1) / (game.cols - 1);
 
-		for (r = 0; r < MAP_HEIGHT; r += row_inc)
-			for (c = 0; c < MAP_WIDTH; c += col_inc)
+		for (r = 0; r < MAP_HEIGHT; r += row_inc) {
+			for (c = 0; c < MAP_WIDTH; c += col_inc) {
 				print_movie_cell(mapbuf, r, c, row_inc,
 				                 col_inc);
+			}
+		}
 
 		(void)redisplay();
 		delay();
@@ -835,17 +860,20 @@ void stat_display(char *mbuf, int round) {
 
 	for (i = 0; i < MAP_SIZE; i++) {
 		char *p = strchr(pieces, mbuf[i]);
-		if (p)
+		if (p) {
 			counts[p - pieces] += 1;
+		}
 	}
 	user_cost = 0;
-	for (i = 1; i <= NUM_OBJECTS; i++)
+	for (i = 1; i <= NUM_OBJECTS; i++) {
 		user_cost += counts[i] * piece_attr[i - 1].build_time;
+	}
 
 	comp_cost = 0;
-	for (i = NUM_OBJECTS + 2; i <= 2 * NUM_OBJECTS + 1; i++)
+	for (i = NUM_OBJECTS + 2; i <= 2 * NUM_OBJECTS + 1; i++) {
 		comp_cost +=
 		    counts[i] * piece_attr[i - NUM_OBJECTS - 2].build_time;
+	}
 
 	for (i = 0; i < NUM_OBJECTS + 1; i++) {
 		pos_str(1, (int)i * 6, "%2d %c  ", counts[i], pieces[i]);

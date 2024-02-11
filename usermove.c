@@ -36,16 +36,17 @@ void user_move(void) {
 	   also scan through all cities before possibly asking the
 	   user what to produce in each city. */
 
-	for (i = 0; i < NUM_OBJECTS; i++)
+	for (i = 0; i < NUM_OBJECTS; i++) {
 		for (obj = game.user_obj[i]; obj != NULL;
 		     obj = obj->piece_link.next) {
 			obj->moved = 0; /* nothing moved yet */
 			scan(game.user_map,
 			     obj->loc); /* refresh user's view of world */
 		}
+	}
 
 	/* produce new hardware */
-	for (i = 0; i < NUM_CITY; i++)
+	for (i = 0; i < NUM_CITY; i++) {
 		if (game.city[i].owner == USER) {
 			scan(game.user_map, game.city[i].loc);
 			prod = game.city[i].prod;
@@ -68,6 +69,7 @@ void user_move(void) {
 				/* produce should set object.moved to 0 */
 			}
 		}
+	}
 
 	/* move all satellites */
 	for (obj = game.user_obj[SATELLITE]; obj != NULL; obj = next_obj) {
@@ -76,33 +78,38 @@ void user_move(void) {
 	}
 
 	sec_start = cur_sector(); /* get currently displayed sector */
-	if (sec_start == -1)
+	if (sec_start == -1) {
 		sec_start = 0;
+	}
 
 	/* loop through sectors, moving every piece in the sector */
 	for (i = sec_start; i < sec_start + NUM_SECTORS; i++) {
 		int sec = i % NUM_SECTORS;
 		sector_change(); /* allow screen to be redrawn */
 
-		for (j = 0; j < NUM_OBJECTS; j++) /* loop through obj lists */
+		for (j = 0; j < NUM_OBJECTS; j++) { /* loop through obj lists */
 			for (obj = game.user_obj[move_order[j]]; obj != NULL;
 			     obj = next_obj) { /* loop through objs in list */
 				next_obj = obj->piece_link.next;
 
-				if (!obj->moved) /* object not moved yet? */
+				if (!obj->moved) { /* object not moved yet? */
 					if (loc_sector(obj->loc) ==
-					    sec) /* object in sector? */
+					    sec) { /* object in sector? */
 						piece_move(
 						    obj); /* yup; move the
 						             object */
+					}
+				}
 			}
+		}
 		if (cur_sector() == sec) {   /* is sector displayed? */
 			print_sector_u(sec); /* make screen up-to-date */
 			redisplay();         /* show it to the user */
 		}
 	}
-	if (game.save_movie)
+	if (game.save_movie) {
 		save_movie_screen();
+	}
 }
 
 /*
@@ -127,9 +134,11 @@ void piece_move(piece_info_t *obj) {
 
 	/* set func for piece if on city */
 	cityp = find_city(obj->loc);
-	if (cityp != NULL)
-		if (cityp->func[obj->type] != NOFUNC)
+	if (cityp != NULL) {
+		if (cityp->func[obj->type] != NOFUNC) {
 			obj->func = cityp->func[obj->type];
+		}
+	}
 
 	changed_loc = false; /* not changed yet */
 	speed = piece_attr[obj->type].speed;
@@ -148,7 +157,7 @@ void piece_move(piece_info_t *obj) {
 			need_input = false; /* we got it */
 		}
 
-		if (obj->moved == saved_moves) /* user set function? */
+		if (obj->moved == saved_moves) { /* user set function? */
 			switch (obj->func) { /* handle preprogrammed function */
 			case NOFUNC:
 				break;
@@ -198,9 +207,11 @@ void piece_move(piece_info_t *obj) {
 				move_path(obj);
 				break;
 			}
+		}
 
-		if (obj->moved == saved_moves)
+		if (obj->moved == saved_moves) {
 			need_input = true;
+		}
 
 		/* handle fighters specially.  If in a city or carrier, turn
 		   is over and reset range to max.  Otherwise, if
@@ -225,16 +236,18 @@ void piece_move(piece_info_t *obj) {
 			}
 		}
 
-		if (saved_loc != obj->loc)
+		if (saved_loc != obj->loc) {
 			changed_loc = true;
+		}
 	}
 	/* if a boat is in port, damaged, and never moved, fix some damage */
 	if (obj->hits > 0   /* still alive? */
 	    && !changed_loc /* object never changed location? */
-	    && obj->type != ARMY && obj->type != FIGHTER /* it is a boat? */
-	    && obj->hits < max_hits                      /* it is damaged? */
-	    && game.user_map[obj->loc].contents == 'O')  /* it is in port? */
-		obj->hits++;                             /* fix some damage */
+	    && obj->type != ARMY && obj->type != FIGHTER  /* it is a boat? */
+	    && obj->hits < max_hits                       /* it is damaged? */
+	    && game.user_map[obj->loc].contents == 'O') { /* it is in port? */
+		obj->hits++;                              /* fix some damage */
+	}
 }
 
 /*
@@ -256,8 +269,9 @@ void move_random(piece_info_t *obj) {
 			nloc++; /* count locations we can move to */
 		}
 	}
-	if (nloc == 0)
-		return;             /* no legal move */
+	if (nloc == 0) {
+		return; /* no legal move */
+	}
 	i = irand((long)nloc - 1);  /* choose random direction */
 	move_obj(obj, loc_list[i]); /* move the piece */
 }
@@ -291,17 +305,19 @@ void move_explore(piece_info_t *obj) {
 		break;
 	}
 
-	if (loc == obj->loc)
+	if (loc == obj->loc) {
 		return; /* nothing to explore */
-
-	if (game.user_map[loc].contents == ' ' && path_map[loc].cost == 2)
+	}
+	if (game.user_map[loc].contents == ' ' && path_map[loc].cost == 2) {
 		vmap_mark_adjacent(path_map, obj->loc);
-	else
+	} else {
 		vmap_mark_path(path_map, game.user_map, loc);
+	}
 
 	loc = vmap_find_dir(path_map, game.user_map, obj->loc, terrain, " ");
-	if (loc != obj->loc)
+	if (loc != obj->loc) {
 		move_obj(obj, loc);
+	}
 }
 
 /*
@@ -319,8 +335,9 @@ void move_transport(piece_info_t *obj) {
 	if (loc != obj->loc) {
 		move_obj(obj, loc);
 		obj->func = NOFUNC;
-	} else
+	} else {
 		obj->moved = piece_attr[obj->type].speed;
+	}
 }
 
 /*
@@ -349,14 +366,18 @@ void move_armyload(piece_info_t *obj) {
 		             sizeof(view_map_t) * MAP_SIZE);
 
 		/* mark loading transports or cities building transports */
-		for (p = game.user_obj[TRANSPORT]; p; p = p->piece_link.next)
-			if (p->count < obj_capacity(p)) /* not full? */
+		for (p = game.user_obj[TRANSPORT]; p; p = p->piece_link.next) {
+			if (p->count < obj_capacity(p)) { /* not full? */
 				amap[p->loc].contents = '$';
+			}
+		}
 
-		for (i = 0; i < NUM_CITY; i++)
+		for (i = 0; i < NUM_CITY; i++) {
 			if (game.city[i].owner == USER &&
-			    game.city[i].prod == TRANSPORT)
+			    game.city[i].prod == TRANSPORT) {
 				amap[game.city[i].loc].contents = '$';
+			}
+		}
 	}
 }
 
@@ -373,14 +394,15 @@ void move_armyattack(piece_info_t *obj) {
 	loc = vmap_find_lobj(path_map, game.user_map, obj->loc,
 	                     &user_army_attack);
 
-	if (loc == obj->loc)
+	if (loc == obj->loc) {
 		return; /* nothing to attack */
-
+	}
 	vmap_mark_path(path_map, game.user_map, loc);
 
 	loc = vmap_find_dir(path_map, game.user_map, obj->loc, "+", "X*a");
-	if (loc != obj->loc)
+	if (loc != obj->loc) {
 		move_obj(obj, loc);
+	}
 }
 
 void move_ttload(piece_info_t *obj) { ABORT; }
@@ -408,15 +430,16 @@ void move_repair(piece_info_t *obj) {
 	loc = vmap_find_wobj(path_map, game.user_map, obj->loc,
 	                     &user_ship_repair);
 
-	if (loc == obj->loc)
+	if (loc == obj->loc) {
 		return; /* no reachable city */
-
+	}
 	vmap_mark_path(path_map, game.user_map, loc);
 
 	/* try to be next to ocean to avoid enemy pieces */
 	loc = vmap_find_dir(path_map, game.user_map, obj->loc, ".O", ".");
-	if (loc != obj->loc)
+	if (loc != obj->loc) {
 		move_obj(obj, loc);
+	}
 }
 
 /*
@@ -426,10 +449,11 @@ Otherwise we awaken the object.
 */
 
 void move_fill(piece_info_t *obj) {
-	if (obj->count == obj_capacity(obj)) /* full? */
-		obj->func = NOFUNC;          /* awaken full boat */
-	else
+	if (obj->count == obj_capacity(obj)) { /* full? */
+		obj->func = NOFUNC;            /* awaken full boat */
+	} else {
 		obj->moved = piece_attr[obj->type].speed;
+	}
 }
 
 /*
@@ -453,14 +477,16 @@ void move_land(piece_info_t *obj) {
 			best_loc = p->loc;
 		}
 	}
-	if (best_dist == 0)
+	if (best_dist == 0) {
 		obj->moved += 1; /* fighter is on a city */
 
-	else if (best_dist <= obj->range)
+	} else if (best_dist <= obj->range) {
 		move_to_dest(obj, best_loc);
+	}
 
-	else
+	else {
 		obj->func = NOFUNC; /* can't reach city or carrier */
+	}
 }
 
 /*
@@ -476,8 +502,9 @@ void move_dir(piece_info_t *obj) {
 	dir = MOVE_DIR(obj->func);
 	loc = obj->loc + dir_offset[dir];
 
-	if (good_loc(obj, loc))
+	if (good_loc(obj, loc)) {
 		move_obj(obj, loc);
+	}
 }
 
 /*
@@ -488,10 +515,11 @@ move in the first direction we find.
 */
 
 void move_path(piece_info_t *obj) {
-	if (obj->loc == obj->func)
+	if (obj->loc == obj->func) {
 		obj->func = NOFUNC;
-	else
+	} else {
 		move_to_dest(obj, obj->func);
+	}
 }
 
 /*
@@ -524,14 +552,15 @@ void move_to_dest(piece_info_t *obj, loc_t dest) {
 
 	new_loc = vmap_find_dest(path_map, game.user_map, obj->loc, dest, USER,
 	                         fterrain);
-	if (new_loc == obj->loc)
+	if (new_loc == obj->loc) {
 		return; /* can't get there */
-
+	}
 	vmap_mark_path(path_map, game.user_map, dest);
 	new_loc =
 	    vmap_find_dir(path_map, game.user_map, obj->loc, mterrain, " .");
-	if (new_loc == obj->loc)
+	if (new_loc == obj->loc) {
 		return; /* can't move ahead */
+	}
 	ASSERT(good_loc(obj, new_loc));
 	move_obj(obj, new_loc); /* everything looks good */
 }
@@ -664,11 +693,12 @@ void reset_func(piece_info_t *obj) {
 
 	cityp = find_city(obj->loc);
 
-	if (cityp != NULL)
+	if (cityp != NULL) {
 		if (cityp->func[obj->type] != NOFUNC) {
 			obj->func = cityp->func[obj->type];
 			(void)awake(obj);
 		}
+	}
 }
 
 /*
@@ -678,10 +708,11 @@ the city.
 */
 
 void user_skip(piece_info_t *obj) {
-	if (obj->type == ARMY && game.user_map[obj->loc].contents == 'O')
+	if (obj->type == ARMY && game.user_map[obj->loc].contents == 'O') {
 		move_army_to_city(obj, obj->loc);
-	else
+	} else {
 		obj->moved++;
+	}
 }
 
 /*
@@ -690,10 +721,11 @@ or carrier.  If not, we beep at the user.
 */
 
 void user_fill(piece_info_t *obj) {
-	if (obj->type != TRANSPORT && obj->type != CARRIER)
+	if (obj->type != TRANSPORT && obj->type != CARRIER) {
 		complain();
-	else
+	} else {
 		obj->func = FILL;
+	}
 }
 
 /*
@@ -768,10 +800,11 @@ Set a fighter's function to land at the nearest city.
 */
 
 void user_land(piece_info_t *obj) {
-	if (obj->type != FIGHTER)
+	if (obj->type != FIGHTER) {
 		complain();
-	else
+	} else {
 		obj->func = LAND;
+	}
 }
 
 /*
@@ -785,10 +818,11 @@ Set an army's function to WFTRANSPORT.
 */
 
 void user_transport(piece_info_t *obj) {
-	if (obj->type != ARMY)
+	if (obj->type != ARMY) {
 		complain();
-	else
+	} else {
 		obj->func = WFTRANSPORT;
+	}
 }
 
 /*
@@ -796,10 +830,11 @@ Set an army's function to ARMYATTACK.
 */
 
 void user_armyattack(piece_info_t *obj) {
-	if (obj->type != ARMY)
+	if (obj->type != ARMY) {
 		complain();
-	else
+	} else {
 		obj->func = ARMYATTACK;
+	}
 }
 
 /*
@@ -807,10 +842,11 @@ Set a ship's function to REPAIR.
 */
 
 void user_repair(piece_info_t *obj) {
-	if (obj->type == ARMY || obj->type == FIGHTER)
+	if (obj->type == ARMY || obj->type == FIGHTER) {
 		complain();
-	else
+	} else {
 		obj->func = REPAIR;
+	}
 }
 
 /*
@@ -931,14 +967,16 @@ necessary, and attack if necessary.
 */
 
 void user_dir_army(piece_info_t *obj, loc_t loc) {
-	if (game.user_map[loc].contents == 'O') /* attacking own city */
+	if (game.user_map[loc].contents == 'O') { /* attacking own city */
 		move_army_to_city(obj, loc);
+	}
 
-	else if (game.user_map[loc].contents == 'T') /* transport full? */
+	else if (game.user_map[loc].contents == 'T') { /* transport full? */
 		fatal(obj, loc,
 		      "Sorry, sir.  There is no more room on the transport.  "
 		      "Do you insist? ",
 		      "Your army jumped into the briny and drowned.");
+	}
 
 	else if (game.real_map[loc].contents ==
 	         MAP_SEA) { /* going for a swim? */
@@ -946,8 +984,9 @@ void user_dir_army(piece_info_t *obj, loc_t loc) {
 
 		if (!getyn(/* thanks to Craig Hansen for this next message */
 		           "Troops can't walk on water, sir.  Do you really "
-		           "want to go to sea? "))
+		           "want to go to sea? ")) {
 			return;
+		}
 
 		if (game.user_map[obj->loc].contents == 'T') {
 			comment("Your army jumped into the briny and drowned.");
@@ -971,22 +1010,25 @@ void user_dir_army(piece_info_t *obj, loc_t loc) {
 		}
 		if (obj->hits > 0) {
 			kill_obj(obj, loc);
-			if (enemy_killed)
+			if (enemy_killed) {
 				scan(game.comp_map, loc);
+			}
 		}
 	}
 
 	else if (isupper(game.user_map[loc].contents) &&
 	         game.user_map[loc].contents != 'X') { /* attacking self */
 		if (!getyn("Sir, those are our men!  Do you really want to "
-		           "attack them? "))
+		           "attack them? ")) {
 			return;
+		}
 
 		attack(obj, loc);
 	}
 
-	else
+	else {
 		attack(obj, loc);
+	}
 }
 
 /*
@@ -995,22 +1037,25 @@ three cases:  attacking a city, attacking ourself, attacking the enemy.
 */
 
 void user_dir_fighter(piece_info_t *obj, loc_t loc) {
-	if (game.real_map[loc].contents == MAP_CITY)
+	if (game.real_map[loc].contents == MAP_CITY) {
 		fatal(obj, loc,
 		      "That's never worked before, sir.  Do you really want to "
 		      "try? ",
 		      "Your fighter was shot down.");
+	}
 
 	else if (isupper(game.user_map[loc].contents)) {
 		if (!getyn("Sir, those are our men!  "
-		           "Do you really want to attack them? "))
+		           "Do you really want to attack them? ")) {
 			return;
+		}
 
 		attack(obj, loc);
 	}
 
-	else
+	else {
 		attack(obj, loc);
+	}
 }
 
 /*
@@ -1034,8 +1079,9 @@ void user_dir_ship(piece_info_t *obj, loc_t loc) {
 		bool enemy_killed = false;
 
 		if (!getyn("Ships need sea to float, sir.  Do you really want "
-		           "to go ashore? "))
+		           "to go ashore? ")) {
 			return;
+		}
 
 		if (game.user_map[loc].contents == MAP_LAND) {
 			comment("Your %s broke up on shore.",
@@ -1058,21 +1104,24 @@ void user_dir_ship(piece_info_t *obj, loc_t loc) {
 		}
 		if (obj->hits > 0) {
 			kill_obj(obj, loc);
-			if (enemy_killed)
+			if (enemy_killed) {
 				scan(game.comp_map, loc);
+			}
 		}
 	}
 
 	else if (isupper(game.user_map[loc].contents)) { /* attacking self */
 		if (!getyn("Sir, those are our men!  Do you really want to "
-		           "attack them? "))
+		           "attack them? ")) {
 			return;
+		}
 
 		attack(obj, loc);
 	}
 
-	else
+	else {
 		attack(obj, loc);
+	}
 }
 
 /*
@@ -1086,14 +1135,16 @@ void move_army_to_city(piece_info_t *obj, loc_t city_loc) {
 
 	tt = find_nfull(TRANSPORT, city_loc);
 
-	if (tt != NULL)
+	if (tt != NULL) {
 		move_obj(obj, city_loc);
+	}
 
-	else
+	else {
 		fatal(obj, city_loc,
 		      "That's our city, sir!  Do you really want to attack the "
 		      "garrison? ",
 		      "Your rebel army was liquidated.");
+	}
 }
 
 /*
@@ -1101,9 +1152,9 @@ Cancel game.automove mode.
 */
 
 void user_cancel_auto(void) {
-	if (!game.automove)
+	if (!game.automove) {
 		comment("Not in auto mode!");
-	else {
+	} else {
 		game.automove = false;
 		comment("Auto mode cancelled.");
 	}
@@ -1132,9 +1183,9 @@ bool awake(piece_info_t *obj) {
 		obj->moved = piece_attr[ARMY].range;
 		return (false);
 	}
-	if (obj->func == NOFUNC)
+	if (obj->func == NOFUNC) {
 		return (true); /* object is awake */
-
+	}
 	if (obj->type == FIGHTER /* wake fighters */
 	    && obj->func != LAND /* that aren't returning to base */
 	    && obj->func < 0     /* and which don't have a path */
@@ -1146,8 +1197,9 @@ bool awake(piece_info_t *obj) {
 		char c = game.user_map[obj->loc + dir_offset[i]].contents;
 
 		if (islower(c) || c == MAP_CITY || c == 'X') {
-			if (obj->func < 0)
+			if (obj->func < 0) {
 				obj->func = NOFUNC; /* awaken */
+			}
 			return (true);
 		}
 	}

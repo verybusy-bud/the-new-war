@@ -123,8 +123,9 @@ information, we set the need_delay flag.
 */
 
 void info(char *a, char *b, char *c) {
-	if (need_delay)
+	if (need_delay) {
 		delay();
+	}
 	topmsg(1, a);
 	topmsg(2, b);
 	topmsg(3, c);
@@ -150,8 +151,9 @@ void comment(char *fmt, ...) {
 void pdebug(char *fmt, ...) {
 	va_list ap;
 
-	if (!game.print_debug)
+	if (!game.print_debug) {
 		return;
+	}
 
 	va_start(ap, fmt);
 	if (need_delay) {
@@ -294,10 +296,12 @@ bool getyn(char *message) {
 		prompt(message, 0, 0, 0, 0, 0, 0, 0, 0);
 		c = get_chx();
 
-		if (c == 'Y')
+		if (c == 'Y') {
 			return (true);
-		if (c == 'N')
+		}
+		if (c == 'N') {
 			return (false);
+		}
 
 		error("Please answer Y or N.", 0, 0, 0, 0, 0, 0, 0, 0);
 	}

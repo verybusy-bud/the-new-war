@@ -132,8 +132,9 @@ sector is not displayed, return -1.
 */
 
 int cur_sector(void) {
-	if (whose_map != USER)
+	if (whose_map != USER) {
 		return (-1);
+	}
 	return (save_sector);
 }
 
@@ -143,8 +144,9 @@ is not on the screen, we return -1.
 */
 
 loc_t cur_cursor(void) {
-	if (whose_map != USER)
+	if (whose_map != USER) {
 		return (-1);
+	}
 	return (save_cursor);
 }
 
@@ -160,8 +162,9 @@ redisplay the sector, or if the location is not on the screen.
 void display_loc(int whose, view_map_t vmap[], loc_t loc)
 /* whose is whose map to display; loc is location to display */
 {
-	if (change_ok || whose != whose_map || !on_screen(loc))
+	if (change_ok || whose != whose_map || !on_screen(loc)) {
 		print_sector(whose, vmap, loc_sector(loc));
+	}
 
 	show_loc(vmap, loc);
 }
@@ -173,8 +176,9 @@ Display a location iff the location is on the screen.
 void display_locx(int whose, view_map_t vmap[], loc_t loc)
 /* whose is whose map to display; loc is location to display */
 {
-	if (whose == whose_map && on_screen(loc))
+	if (whose == whose_map && on_screen(loc)) {
 		show_loc(vmap, loc);
+	}
 }
 
 /*
@@ -188,10 +192,11 @@ void show_loc(view_map_t vmap[], loc_t loc) {
 	c = loc_col(loc);
 	(void)move(r - ref_row + NUMTOPS, c - ref_col);
 
-	if (game.showprod && vmap[loc].contents == 'O')
+	if (game.showprod && vmap[loc].contents == 'O') {
 		disp_city_prod(loc);
-	else
+	} else {
 		disp_square(&vmap[loc]);
+	}
 	save_cursor = loc; /* remember cursor location */
 	(void)move(r - ref_row + NUMTOPS, c - ref_col);
 }
@@ -240,9 +245,10 @@ void print_sector(int whose, view_map_t vmap[], int sector)
 	      && ref_row <= first_row /* top row on screen? */
 	      && ref_col <= first_col /* first col on screen? */
 	      && ref_row + display_rows - 1 >= last_row /* bot row on screen? */
-	      &&
-	      ref_col + display_cols - 1 >= last_col)) /* last col on screen? */
-		(void)clear(); /* erase current screen */
+	      && ref_col + display_cols - 1 >=
+	             last_col)) { /* last col on screen? */
+		(void)clear();    /* erase current screen */
+	}
 
 	/* figure out first row and col to print; subtract half
 	   the extra lines from the first line */
@@ -251,36 +257,42 @@ void print_sector(int whose, view_map_t vmap[], int sector)
 	ref_col = first_col - (display_cols - COLS_PER_SECTOR) / 2;
 
 	/* try not to go past bottom of map */
-	if (ref_row + display_rows - 1 > MAP_HEIGHT - 1)
+	if (ref_row + display_rows - 1 > MAP_HEIGHT - 1) {
 		ref_row = MAP_HEIGHT - 1 - (display_rows - 1);
+	}
 
 	/* never go past top of map */
-	if (ref_row < 0)
+	if (ref_row < 0) {
 		ref_row = 0;
+	}
 
 	/* same with columns */
-	if (ref_col + display_cols - 1 > MAP_WIDTH - 1)
+	if (ref_col + display_cols - 1 > MAP_WIDTH - 1) {
 		ref_col = MAP_WIDTH - 1 - (display_cols - 1);
+	}
 
-	if (ref_col < 0)
+	if (ref_col < 0) {
 		ref_col = 0;
+	}
 
 	whose_map = whose; /* remember whose map is displayed */
 	display_screen(vmap);
 
 	/* print x-coordinates along bottom of screen */
-	for (c = ref_col; c < ref_col + display_cols && c < MAP_WIDTH; c++)
+	for (c = ref_col; c < ref_col + display_cols && c < MAP_WIDTH; c++) {
 		if (c % 10 == 0) {
 			pos_str(game.lines - 1, c - ref_col, "%d", c);
 		}
+	}
 	/* print y-coordinates along right of screen */
 	for (r = ref_row; r < ref_row + display_rows && r < MAP_HEIGHT; r++) {
-		if (r % 2 == 0)
+		if (r % 2 == 0) {
 			pos_str(r - ref_row + NUMTOPS, game.cols - NUMSIDES + 1,
 			        "%2d", r);
-		else
+		} else {
 			pos_str(r - ref_row + NUMTOPS, game.cols - NUMSIDES + 1,
 			        "  ");
+		}
 	}
 	/* print round number */
 	(void)sprintf(game.jnkbuf, "Sector %d Round %ld", sector, game.date);
@@ -370,16 +382,18 @@ void display_screen(view_map_t vmap[]) {
 	display_rows = game.lines - NUMTOPS - 1; /* num lines to display */
 	display_cols = game.cols - NUMSIDES;
 
-	for (r = ref_row; r < ref_row + display_rows && r < MAP_HEIGHT; r++)
+	for (r = ref_row; r < ref_row + display_rows && r < MAP_HEIGHT; r++) {
 		for (c = ref_col; c < ref_col + display_cols && c < MAP_WIDTH;
 		     c++) {
 			t = row_col_loc(r, c);
 			(void)move(r - ref_row + NUMTOPS, c - ref_col);
-			if (game.showprod && vmap[t].contents == 'O')
+			if (game.showprod && vmap[t].contents == 'O') {
 				disp_city_prod(t);
-			else
+			} else {
 				disp_square(&vmap[t]);
+			}
 		}
+	}
 }
 
 /*
@@ -395,10 +409,12 @@ bool move_cursor(loc_t *cursor, int offset)
 	int r, c;
 
 	t = *cursor + offset; /* proposed location */
-	if (!game.real_map[t].on_board)
+	if (!game.real_map[t].on_board) {
 		return (false); /* trying to move off map */
-	if (!on_screen(t))
+	}
+	if (!on_screen(t)) {
 		return (false); /* loc is off screen */
+	}
 
 	*cursor = t; /* update cursor position */
 	save_cursor = *cursor;
@@ -425,8 +441,9 @@ bool on_screen(loc_t loc) {
 	    new_r - ref_row > game.lines - NUMTOPS - 1 /* past bot of screen? */
 	    || new_c < ref_col /* past left edge of screen? */
 	    || new_c - ref_col >
-	           game.cols - NUMSIDES) /* past right edge of screen? */
+	           game.cols - NUMSIDES) { /* past right edge of screen? */
 		return (false);
+	}
 
 	return (true);
 }
@@ -459,9 +476,11 @@ void print_zoom(view_map_t *vmap) {
 	    (MAP_HEIGHT + game.lines - NUMTOPS - 1) / (game.lines - NUMTOPS);
 	col_inc = (MAP_WIDTH + game.cols - 1) / (game.cols - 1);
 
-	for (r = 0; r < MAP_HEIGHT; r += row_inc)
-		for (c = 0; c < MAP_WIDTH; c += col_inc)
+	for (r = 0; r < MAP_HEIGHT; r += row_inc) {
+		for (c = 0; c < MAP_WIDTH; c += col_inc) {
 			print_zoom_cell(vmap, r, c, row_inc, col_inc);
+		}
+	}
 
 	pos_str(0, 0, "Round #%d", game.date);
 
@@ -478,12 +497,15 @@ void print_zoom_cell(view_map_t *vmap, int row, int col, int row_inc,
 	char cell;
 
 	cell = ' ';
-	for (r = row; r < row + row_inc; r++)
-		for (c = col; c < col + col_inc; c++)
+	for (r = row; r < row + row_inc; r++) {
+		for (c = col; c < col + col_inc; c++) {
 			if (strchr(zoom_list,
 			           vmap[row_col_loc(r, c)].contents) <
-			    strchr(zoom_list, cell))
+			    strchr(zoom_list, cell)) {
 				cell = vmap[row_col_loc(r, c)].contents;
+			}
+		}
+	}
 
 	(void)move(row / row_inc + NUMTOPS, col / col_inc);
 	(void)addch((chtype)cell);
@@ -505,9 +527,11 @@ void print_pzoom(char *s, path_map_t *pmap, view_map_t *vmap) {
 	    (MAP_HEIGHT + game.lines - NUMTOPS - 1) / (game.lines - NUMTOPS);
 	col_inc = (MAP_WIDTH + game.cols - 1) / (game.cols - 1);
 
-	for (r = 0; r < MAP_HEIGHT; r += row_inc)
-		for (c = 0; c < MAP_WIDTH; c += col_inc)
+	for (r = 0; r < MAP_HEIGHT; r += row_inc) {
+		for (c = 0; c < MAP_WIDTH; c += col_inc) {
 			print_pzoom_cell(pmap, vmap, r, c, row_inc, col_inc);
+		}
+	}
 
 	prompt(s, 0, 0, 0, 0, 0, 0, 0, 0);
 	(void)get_chx(); /* wait for user */
@@ -533,11 +557,12 @@ void print_pzoom_cell(path_map_t *pmap, view_map_t *vmap, int row, int col,
 	sum = 0;
 	d = 0; /* number of squares in cell */
 
-	for (r = row; r < row + row_inc; r++)
+	for (r = row; r < row + row_inc; r++) {
 		for (c = col; c < col + col_inc; c++) {
 			sum += pmap[row_col_loc(r, c)].cost;
 			d += 1;
 		}
+	}
 	// cppcheck-suppress zerodiv
 	sum /= d;
 
@@ -553,10 +578,11 @@ void print_pzoom_cell(path_map_t *pmap, view_map_t *vmap, int row, int col,
 		cell = 'U';
 	else {
 		sum %= 36;
-		if (sum < 10)
+		if (sum < 10) {
 			cell = sum + '0';
-		else
+		} else {
 			cell = sum - 10 + 'a';
+		}
 	}
 
 	if (cell == ' ')
@@ -598,10 +624,12 @@ void ttinit(void) {
 #endif /* A_COLOR */
 	game.lines = LINES;
 	game.cols = COLS;
-	if (game.lines > MAP_HEIGHT + NUMTOPS + 1)
+	if (game.lines > MAP_HEIGHT + NUMTOPS + 1) {
 		game.lines = MAP_HEIGHT + NUMTOPS + 1;
-	if (game.cols > MAP_WIDTH + NUMSIDES)
+	}
+	if (game.cols > MAP_WIDTH + NUMSIDES) {
 		game.cols = MAP_WIDTH + NUMSIDES;
+	}
 }
 
 /*
@@ -690,11 +718,14 @@ void print_movie_cell(char *mbuf, int row, int col, int row_inc, int col_inc) {
 	char cell;
 
 	cell = ' ';
-	for (r = row; r < row + row_inc; r++)
-		for (c = col; c < col + col_inc; c++)
+	for (r = row; r < row + row_inc; r++) {
+		for (c = col; c < col + col_inc; c++) {
 			if (strchr(zoom_list, mbuf[row_col_loc(r, c)]) <
-			    strchr(zoom_list, cell))
+			    strchr(zoom_list, cell)) {
 				cell = mbuf[row_col_loc(r, c)];
+			}
+		}
+	}
 
 	(void)move(row / row_inc + NUMTOPS, col / col_inc);
 	(void)addch((chtype)cell);
