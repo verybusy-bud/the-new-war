@@ -5,7 +5,7 @@
 # See the file COPYING, distributed with empire, for restriction
 # and warranty information.
 
-VERS=1.16
+VERS=$(shell sed -n <NEWS '/^[0-9]/s/:.*//p' | head -1)
 
 # Use -g to compile the program for debugging.
 #DEBUG = -g -DDEBUG
