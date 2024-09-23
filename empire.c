@@ -172,7 +172,7 @@ void do_command(char orders) {
 		redraw();
 		break;
 
-	case '+': /* change debug state */
+	case '+': { /* change debug state */
 		char e = get_chx();
 		if (e == '+') {
 			game.debug = true;
@@ -181,7 +181,7 @@ void do_command(char orders) {
 		} else {
 			huh();
 		}
-		break;
+	} break;
 
 	default:
 		if (game.debug) {
