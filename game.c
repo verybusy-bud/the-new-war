@@ -181,7 +181,7 @@ for a city, we remove land cells which are too close to the city.
 static loc_t land[MAP_SIZE];
 
 void place_cities(void) {
-	count_t regen_land();
+	count_t regen_land(count_t);
 
 	count_t placed;
 	count_t num_land;

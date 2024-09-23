@@ -9,6 +9,7 @@
 /*
 extern.h -- define global non-constant storage.
 */
+#include <curses.h>	// Needed for chtype
 
 extern gamestate_t game;
 
@@ -130,7 +131,7 @@ void complain(void);
 void delay(void);
 void close_disp(void);
 void pos_str(int row, int col, char *str, ...);
-int direction();
+int direction(chtype c);
 
 void init_game(void); /* game routines */
 void save_game(void);

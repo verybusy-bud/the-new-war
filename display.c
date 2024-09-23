@@ -19,7 +19,6 @@ information:
 
 #include "empire.h"
 #include "extern.h"
-#include <curses.h>
 #include <stdarg.h>
 #include <string.h>
 
