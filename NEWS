@@ -1,5 +1,8 @@
 			vms-empire news
 
+1.18: 2024-10-03::
+	Port changes for GCC 10.
+
 1.17: 2024-02-11::
 	Remove unnecessary delays.
 	Fix a defective sort in the fame AI.
