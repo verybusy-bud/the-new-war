@@ -17,6 +17,8 @@ Description: The ancestor of all expand/explore/exploit/exterminate games.
 
 Homepage: http://www.catb.org/~esr/vms-empire
 
+XBS-Packaged-As: vms-empire
+
 XBS-HTML-Target: index.html
 
 XBS-Repository-URL: https://gitlab.com/esr/vms-empire

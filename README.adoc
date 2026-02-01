@@ -17,3 +17,8 @@ to modify this code.
 
 The ancestral code was by Chuck Simmons <chuck@amdahl.com>.  Since
 around 1990 it has been maintained by Eric S. Raymond <esr@thyrsus.com>
+
+This code is commonly packaged as "vms-empire".
+
+image:https://repology.org/badge/vertical-allrepos/vms-empire.svg[Repology
+package status]

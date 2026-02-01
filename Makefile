@@ -120,7 +120,7 @@ reflow:
 clobber: clean
 	rm -f vms-empire vms-empire-*.tar*
 
-SOURCES = README HACKING NEWS control empire.6 vms-empire.xml COPYING Makefile BUGS AUTHORS $(FILES) $(HEADERS) vms-empire.png vms-empire.desktop
+SOURCES = README.adoc HACKING NEWS control empire.6 vms-empire.xml COPYING Makefile BUGS AUTHORS $(FILES) $(HEADERS) vms-empire.png vms-empire.desktop
 
 vms-empire-$(VERS).tar.gz: $(SOURCES)
 	@ls $(SOURCES) | sed s:^:vms-empire-$(VERS)/: >MANIFEST
