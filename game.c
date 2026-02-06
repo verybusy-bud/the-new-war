@@ -547,6 +547,64 @@ tell the user why.
 #define SAVE_MAGIC_LEN 11
 #define SAVE_VERSION 2
 
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L
+#define STATIC_ASSERT(cond, msg) _Static_assert(cond, msg)
+#else
+#define STATIC_ASSERT(cond, msg) typedef char static_assert_##msg[(cond) ? 1 : -1]
+#endif
+
+STATIC_ASSERT(sizeof(bool) == 1, bool_size_must_be_1);
+STATIC_ASSERT(sizeof(loc_t) <= 4, loc_t_must_fit_int32);
+STATIC_ASSERT(sizeof(long) <= 8, long_must_fit_int64);
+
+/*
+Save format (little-endian, field-wise, versioned):
+Header:
+  magic[11] = "EMPIRE-SAVE"
+  u32 version
+  u32 map_width
+  u32 map_height
+  u32 map_size
+  u32 num_city
+  u32 list_size
+  u32 num_objects
+State:
+  i64 date
+  u8  automove
+  u8  resigned
+  u8  debug
+  i32 win
+  u8  save_movie
+  i32 user_score
+  i32 comp_score
+Maps:
+  real_map: for each cell (map_size)
+    u8 contents
+    u8 on_board
+  comp_map: for each cell
+    u8 contents
+    i64 seen
+  user_map: for each cell
+    u8 contents
+    i64 seen
+Cities: num_city records
+  i32 loc
+  u8 owner
+  i64 work
+  u8 prod
+  i64 func[num_objects]
+Objects: list_size records
+  i32 owner
+  i32 type
+  i32 loc
+  i64 func
+  i32 hits
+  i32 moved
+  i32 count
+  i32 range
+Pointers and lists are reconstructed on load.
+*/
+
 static bool write_u8(FILE *f, uint8_t v) {
 	return xwrite(f, (char *)&v, (int)sizeof(v));
 }
@@ -825,10 +883,15 @@ int restore_game(void) {
 	R_RU8(game.save_movie);
 	R_RI32(game.user_score);
 	R_RI32(game.comp_score);
+	game.automove = !!game.automove;
+	game.resigned = !!game.resigned;
+	game.debug = !!game.debug;
+	game.save_movie = !!game.save_movie;
 
 	for (i = 0; i < MAP_SIZE; i++) {
 		R_RU8(game.real_map[i].contents);
 		R_RU8(game.real_map[i].on_board);
+		game.real_map[i].on_board = !!game.real_map[i].on_board;
 		game.real_map[i].cityp = NULL;
 		game.real_map[i].objp = NULL;
 	}
