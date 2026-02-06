@@ -308,7 +308,7 @@ void c_map(void) {
 	prompt("Filename? ");
 	get_str(game.jnkbuf, STRSIZE);
 
-	f = fopen(game.jnkbuf, "w");
+	f = fopen(game.jnkbuf, "wb");
 	if (f == NULL) {
 		error("I can't open that file.");
 		return;

@@ -548,7 +548,7 @@ static char buf[32];
 void save_game(void) {
 	FILE *f; /* file to save game in */
 
-	f = fopen(game.savefile, "w"); /* open for output */
+	f = fopen(game.savefile, "wb"); /* open for output */
 	if (f == NULL) {
 		perror("Cannot save saved game");
 		return;
@@ -595,7 +595,7 @@ int restore_game(void) {
 	piece_info_t **list;
 	piece_info_t *obj;
 
-	f = fopen(game.savefile, "r"); /* open for input */
+	f = fopen(game.savefile, "rb"); /* open for input */
 	if (f == NULL) {
 		perror("Cannot open saved game");
 		return false;
@@ -773,7 +773,7 @@ void save_movie_screen(void) {
 	count_t i;
 	piece_info_t *p;
 
-	f = fopen("empmovie.dat", "a"); /* open for append */
+	f = fopen("empmovie.dat", "ab"); /* open for append */
 	if (f == NULL) {
 		perror("Cannot open empmovie.dat");
 		return;
@@ -810,7 +810,7 @@ void replay_movie(void) {
 	int r, c;
 	int round;
 
-	f = fopen("empmovie.dat", "r"); /* open for input */
+	f = fopen("empmovie.dat", "rb"); /* open for input */
 	if (f == NULL) {
 		perror("Cannot open empmovie.dat");
 		return;
