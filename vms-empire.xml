@@ -7,7 +7,9 @@ SPDX-FileCopyrightText: Copyright (C) 1987, 1988 Chuck Simmons
 SPDX-License-Identifier: GPL-2.0+
 See the file COPYING, distributed with empire, for restriction
 and warranty information. -->
-
+<!-- spellcheck: add wargame savefile Automove automove ctrl-L -->
+<!-- spellcheck: add Caltech DEC's DECUS x1VMS Leres Amdahl savefile dest neh -->
+<!-- spellcheck: add func VAY -->
 <refmeta>
 <refentrytitle>Empire</refentrytitle>
 <manvolnum>6</manvolnum>
@@ -344,6 +346,7 @@ time to replenish her destroyed shipping.</para>
 on the side will defeat the piece listed at the top in a battle.
 (The table assumes that both pieces are undamaged.)</para>
 
+<!-- spellcheck: off -->
 <informaltable pgwide='0' frame='all'>
   <tgroup cols='6' align='center'>
     <colspec colname='c1'/>
@@ -404,6 +407,7 @@ on the side will defeat the piece listed at the top in a battle.
     </tbody>
   </tgroup>
 </informaltable>
+<!-- spellcheck: on -->
 
 <para>Notice, however, that when a ship has been damaged, the odds of
 being defeated can go up quite a bit.  For example, a healthy
@@ -524,7 +528,7 @@ The function of a city cannot be set to 'sleep'.</para>
   <term><emphasis remap='B'>Transport</emphasis></term>
   <listitem>
 <para>This movement function only works on armies.  The army sleeps until
-an unfull transport passes by, at which point the army wakes up and
+an transport that is not full passes by, at which point the army wakes up and
 boards the transport.</para>
   </listitem>
   </varlistentry>
@@ -723,6 +727,7 @@ of each piece that needs to be moved.  You can then give commands
 to move the piece.  Directions to move are specified by the
 following keys:</para>
 
+<!-- spellcheck: off -->
 <literallayout>
 <emphasis remap='5'>
         QWE
@@ -730,6 +735,7 @@ following keys:</para>
         ZXC
 </emphasis>
 </literallayout>
+<!-- spellcheck: on -->
 
 <para>The arrow and keypad keys on your terminal, if any, should also
 work.</para>

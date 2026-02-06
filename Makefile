@@ -88,9 +88,12 @@ TAGS: $(HEADERS) $(FILES)
 lint: $(FILES)
 	lint -u -D$(SYS) $(FILES) -lcurses
 
+spellcheck:
+	@spellcheck vms-empire.xml
+
 # This should run clean
 cppcheck:
-	@cppcheck --quiet --inline-suppr --suppress=missingIncludeSystem --suppress=unusedFunction --template gcc --enable=all --force *.[ch]
+	@cppcheck --quiet --inline-suppr --suppress=missingIncludeSystem --suppress=unusedFunction --template=gcc --enable=all --force *.[ch]
 
 install: empire.6 uninstall
 	install -m 0755 -d $(DESTDIR)/usr/bin

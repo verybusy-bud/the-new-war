@@ -4,6 +4,7 @@ Repository head::
        Code hardening with ChatGPT 5.2
        Close off a whole bunch of potential buffer overruns.
        Bail out gracefully on failed memory allocations.
+       Documentation is fully spellchecked.
 
 1.18: 2024-10-03::
 	Port changes for GCC 10.
