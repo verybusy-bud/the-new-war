@@ -1066,8 +1066,11 @@ a city, attacking self, attacking enemy.
 
 void user_dir_ship(piece_info_t *obj, loc_t loc) {
 	if (game.real_map[loc].contents == MAP_CITY) {
-		(void)sprintf(game.jnkbuf, "Your %s broke up on shore.",
-		              piece_attr[obj->type].name);
+		char *cur = game.jnkbuf;
+		size_t rem = sizeof(game.jnkbuf);
+
+		(void)buf_append(&cur, &rem, "Your %s broke up on shore.",
+		                 piece_attr[obj->type].name);
 
 		fatal(obj, loc,
 		      "That's never worked before, sir.  Do you really want to "

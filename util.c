@@ -14,10 +14,46 @@ util.c -- various utility routines.
 #include "extern.h"
 #include <curses.h> /* Ugh...shouldn't be needed here */
 #include <signal.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
 #include <unistd.h>
+
+size_t buf_vappend(char **cursor, size_t *remaining, const char *fmt,
+                   va_list ap) {
+	int written;
+
+	if (*remaining == 0) {
+		return 0;
+	}
+
+	written = vsnprintf(*cursor, *remaining, fmt, ap);
+	if (written < 0) {
+		(*cursor)[0] = '\0';
+		return *remaining;
+	}
+
+	if ((size_t)written >= *remaining) {
+		*cursor += *remaining - 1;
+		*remaining = 1;
+		return *remaining;
+	}
+
+	*cursor += written;
+	*remaining -= (size_t)written;
+	return *remaining;
+}
+
+size_t buf_append(char **cursor, size_t *remaining, const char *fmt, ...) {
+	va_list ap;
+	size_t rem;
+
+	va_start(ap, fmt);
+	rem = buf_vappend(cursor, remaining, fmt, ap);
+	va_end(ap);
+	return rem;
+}
 
 /*
 Report a bug.
@@ -25,12 +61,14 @@ Report a bug.
 
 void eassert(char *expression, char *file, int line) {
 	char buf[STRSIZE];
+	char *cur = buf;
+	size_t rem = sizeof(buf);
 
 	(void)move(game.lines, 0);
 	close_disp();
 
-	(void)sprintf(buf, "assert failed: file %s line %d: %s", file, line,
-	              expression);
+	(void)buf_append(&cur, &rem, "assert failed: file %s line %d: %s", file,
+	                 line, expression);
 
 	kill(getpid(), SIGSEGV); /* core dump */
 }

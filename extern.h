@@ -10,8 +10,14 @@
 extern.h -- define global non-constant storage.
 */
 #include <curses.h>	// Needed for chtype
+#include <stdarg.h>
+#include <stddef.h>
 
 extern gamestate_t game;
+
+size_t buf_append(char **cursor, size_t *remaining, const char *fmt, ...);
+size_t buf_vappend(char **cursor, size_t *remaining, const char *fmt,
+                   va_list ap);
 
 /* constant data */
 extern piece_attr_t piece_attr[];

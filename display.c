@@ -294,7 +294,13 @@ void print_sector(int whose, view_map_t vmap[], int sector)
 		}
 	}
 	/* print round number */
-	(void)sprintf(game.jnkbuf, "Sector %d Round %ld", sector, game.date);
+	{
+		char *cur = game.jnkbuf;
+		size_t rem = sizeof(game.jnkbuf);
+
+		(void)buf_append(&cur, &rem, "Sector %d Round %ld", sector,
+		                 game.date);
+	}
 	for (r = 0; game.jnkbuf[r] != '\0'; r++) {
 		if (r + NUMTOPS >= MAP_HEIGHT)
 			break;
@@ -698,10 +704,12 @@ Position the cursor and output a string.
 void pos_str(int row, int col, char *str, ...) {
 	va_list ap;
 	char junkbuf[STRSIZE];
+	char *cur = junkbuf;
+	size_t rem = sizeof(junkbuf);
 
 	va_start(ap, str);
 	(void)move(row, col);
-	vsprintf(junkbuf, str, ap);
+	(void)buf_vappend(&cur, &rem, str, ap);
 	(void)addstr(junkbuf);
 	va_end(ap);
 }

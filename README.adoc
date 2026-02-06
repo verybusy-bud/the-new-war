@@ -1,4 +1,4 @@
-		README for vms-empire
+= README for vms-empire
 
 VMS-Empire is a simulation of a full-scale war between two
 emperors, the computer and you.  Naturally, there is only
@@ -12,6 +12,7 @@ modern ANSI C.  It is known to run not only on Linux but
 also under Windows and Mac OS X; all you need is a local
 port of the curses library.
 
+git push
 The files HACKING and BUGS will be of interest if you intend
 to modify this code.
 

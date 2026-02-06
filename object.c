@@ -456,28 +456,38 @@ bool good_loc(piece_info_t *obj, loc_t loc) {
 void describe_obj(piece_info_t *obj) {
 	char func[STRSIZE];
 	char other[STRSIZE];
+	char *func_cur = func;
+	char *other_cur = other;
+	size_t func_rem = sizeof(func);
+	size_t other_rem = sizeof(other);
 
 	ASSERT(obj != NULL);
 
+	func[0] = 0;
 	// cppcheck-suppress nullPointerRedundantCheck
 	if (obj->func >= 0)
-		(void)sprintf(func, "%d", loc_disp(obj->func));
+		(void)buf_append(&func_cur, &func_rem, "%d",
+		                 loc_disp(obj->func));
 	else
-		(void)sprintf(func, func_name[FUNCI(obj->func)]);
+		(void)buf_append(&func_cur, &func_rem,
+		                 func_name[FUNCI(obj->func)]);
 
 	other[0] = 0;
 
 	switch (obj->type) { /* set other information */
 	case FIGHTER:
-		(void)sprintf(other, "; range = %d", obj->range);
+		(void)buf_append(&other_cur, &other_rem, "; range = %d",
+		                 obj->range);
 		break;
 
 	case TRANSPORT:
-		(void)sprintf(other, "; armies = %d", obj->count);
+		(void)buf_append(&other_cur, &other_rem, "; armies = %d",
+		                 obj->count);
 		break;
 
 	case CARRIER:
-		(void)sprintf(other, "; fighters = %d", obj->count);
+		(void)buf_append(&other_cur, &other_rem, "; fighters = %d",
+		                 obj->count);
 		break;
 	}
 

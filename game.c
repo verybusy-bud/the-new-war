@@ -324,10 +324,15 @@ bool select_cities(void) {
 	}
 	make_pair(); /* create list of ranked pairs */
 
-	(void)sprintf(
-	    game.jnkbuf,
-	    "Choose a difficulty level where 0 is easy and %d is hard: ",
-	    ncont * ncont - 1);
+	{
+		char *cur = game.jnkbuf;
+		size_t rem = sizeof(game.jnkbuf);
+
+		(void)buf_append(
+		    &cur, &rem,
+		    "Choose a difficulty level where 0 is easy and %d is hard: ",
+		    ncont * ncont - 1);
+	}
 
 	pair = get_range(game.jnkbuf, 0, ncont * ncont - 1);
 	comp_cont = pair_tab[pair].comp_cont;

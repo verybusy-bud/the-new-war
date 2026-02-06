@@ -511,8 +511,9 @@ void e_city_info(loc_t edit_cursor) {
 	city_info_t *cityp;
 	int f, s;
 	char func_buf[STRSIZE];
-	char temp_buf[STRSIZE];
 	char junk_buf2[STRSIZE];
+	char *func_cur = func_buf;
+	size_t func_rem = sizeof(func_buf);
 
 	error(""); /* clear line */
 
@@ -533,16 +534,30 @@ void e_city_info(loc_t edit_cursor) {
 	}
 
 	if (f == 1 && s == 1) {
-		(void)sprintf(game.jnkbuf, "1 fighter landed, 1 ship docked");
+		char *cur = game.jnkbuf;
+		size_t rem = sizeof(game.jnkbuf);
+
+		(void)buf_append(&cur, &rem,
+		                 "1 fighter landed, 1 ship docked");
 	} else if (f == 1) {
-		(void)sprintf(game.jnkbuf, "1 fighter landed, %d ships docked",
-		              s);
+		char *cur = game.jnkbuf;
+		size_t rem = sizeof(game.jnkbuf);
+
+		(void)buf_append(&cur, &rem,
+		                 "1 fighter landed, %d ships docked", s);
 	} else if (s == 1) {
-		(void)sprintf(game.jnkbuf, "%d fighters landed, 1 ship docked",
-		              f);
+		char *cur = game.jnkbuf;
+		size_t rem = sizeof(game.jnkbuf);
+
+		(void)buf_append(&cur, &rem,
+		                 "%d fighters landed, 1 ship docked", f);
 	} else {
-		(void)sprintf(game.jnkbuf,
-		              "%d fighters landed, %d ships docked", f, s);
+		char *cur = game.jnkbuf;
+		size_t rem = sizeof(game.jnkbuf);
+
+		(void)buf_append(&cur, &rem,
+		                 "%d fighters landed, %d ships docked", f,
+		                 s);
 	}
 
 	cityp = find_city(edit_cursor);
@@ -552,20 +567,28 @@ void e_city_info(loc_t edit_cursor) {
 	for (s = 0; s < NUM_OBJECTS; s++) { /* for each piece */
 		// cppcheck-suppress nullPointerRedundantCheck
 		if (cityp->func[s] < 0) {
-			(void)sprintf(temp_buf, "%c:%s; ", piece_attr[s].sname,
-			              func_name[FUNCI(cityp->func[s])]);
+			(void)buf_append(
+			    &func_cur, &func_rem, "%c:%s; ",
+			    piece_attr[s].sname,
+			    func_name[FUNCI(cityp->func[s])]);
 		} else {
-			(void)sprintf(temp_buf, "%c: %d;", piece_attr[s].sname,
-			              loc_disp(cityp->func[s]));
+			(void)buf_append(&func_cur, &func_rem, "%c: %d;",
+			                 piece_attr[s].sname,
+			                 loc_disp(cityp->func[s]));
 		}
-
-		(void)strcat(func_buf, temp_buf);
 	}
 
-	(void)sprintf(
-	    junk_buf2, "City at location %d will complete %s on round %ld",
-	    loc_disp(cityp->loc), piece_attr[(int)cityp->prod].article,
-	    game.date + piece_attr[(int)cityp->prod].build_time - cityp->work);
+	{
+		char *cur = junk_buf2;
+		size_t rem = sizeof(junk_buf2);
+
+		(void)buf_append(
+		    &cur, &rem,
+		    "City at location %d will complete %s on round %ld",
+		    loc_disp(cityp->loc), piece_attr[(int)cityp->prod].article,
+		    game.date + piece_attr[(int)cityp->prod].build_time -
+		        cityp->work);
+	}
 
 	info(junk_buf2, game.jnkbuf, func_buf);
 }
