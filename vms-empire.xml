@@ -100,7 +100,7 @@ which are fairly useless.</para>
   <varlistentry>
   <term><option>-f</option><replaceable>savefile</replaceable></term>
   <listitem>
-    <para>Set the save file name (normally empsave.dat).</para>
+    <para>Set the save file name (normally empire.sav).</para>
   </listitem>
   </varlistentry>
 </variablelist>
@@ -671,13 +671,13 @@ associated with your pieces and cities.</para>
   <varlistentry>
   <term><emphasis remap='B'>Restore</emphasis></term>
   <listitem>
-<para>Restore the game from empsave.dat.</para>
+<para>Restore the game from empire.sav.</para>
   </listitem>
   </varlistentry>
   <varlistentry>
   <term><emphasis remap='B'>Save</emphasis></term>
   <listitem>
-<para>Save the game in empsave.dat.</para>
+<para>Save the game in empire.sav.</para>
   </listitem>
   </varlistentry>
   <varlistentry>
@@ -1061,7 +1061,7 @@ Civilization (1990) and Master of Orion (1993).</para>
 <refsect1 id='files'><title>FILES</title>
 <variablelist>
   <varlistentry>
-  <term><emphasis remap='I'>empsave.dat</emphasis></term>
+  <term><emphasis remap='I'>empire.sav</emphasis></term>
   <listitem>
 <para>holds a backup of the game.  Whenever empire is run,
 it will reload any game in this file.</para>

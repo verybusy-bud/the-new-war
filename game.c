@@ -15,6 +15,7 @@ game.c -- Routines to initialize, save, and restore a game.
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 
 count_t remove_land(loc_t loc, count_t num_land);
@@ -528,7 +529,7 @@ void make_pair(void) {
 }
 
 /*
-Save a game.  We save the game in emp_save.dat.  Someday we may want
+Save a game.  We save the game in empire.sav.  Someday we may want
 to ask the user for a file name.  If we cannot save the game, we will
 tell the user why.
 */
@@ -541,21 +542,111 @@ tell the user why.
 	if (!xwrite(f, (char *)&val, sizeof(val)))                             \
 		return
 
-#define SAVECOOKIE "EMPSAVE 1\n" /* increase digit when format changes */
+/* Save-file format identifiers. */
+#define SAVE_MAGIC "EMPIRE-SAVE"
+#define SAVE_MAGIC_LEN 11
+#define SAVE_VERSION 2
 
-static char buf[32];
+static bool write_u8(FILE *f, uint8_t v) {
+	return xwrite(f, (char *)&v, (int)sizeof(v));
+}
+
+static bool write_u32(FILE *f, uint32_t v) {
+	uint8_t b[4];
+
+	b[0] = (uint8_t)(v & 0xff);
+	b[1] = (uint8_t)((v >> 8) & 0xff);
+	b[2] = (uint8_t)((v >> 16) & 0xff);
+	b[3] = (uint8_t)((v >> 24) & 0xff);
+	return xwrite(f, (char *)b, (int)sizeof(b));
+}
+
+static bool write_i32(FILE *f, int32_t v) {
+	return write_u32(f, (uint32_t)v);
+}
+
+static bool write_i64(FILE *f, int64_t v) {
+	uint8_t b[8];
+	uint64_t uv = (uint64_t)v;
+
+	b[0] = (uint8_t)(uv & 0xff);
+	b[1] = (uint8_t)((uv >> 8) & 0xff);
+	b[2] = (uint8_t)((uv >> 16) & 0xff);
+	b[3] = (uint8_t)((uv >> 24) & 0xff);
+	b[4] = (uint8_t)((uv >> 32) & 0xff);
+	b[5] = (uint8_t)((uv >> 40) & 0xff);
+	b[6] = (uint8_t)((uv >> 48) & 0xff);
+	b[7] = (uint8_t)((uv >> 56) & 0xff);
+	return xwrite(f, (char *)b, (int)sizeof(b));
+}
+
+static bool read_u8(FILE *f, uint8_t *v) {
+	return xread(f, (char *)v, (int)sizeof(*v));
+}
+
+static bool read_u32(FILE *f, uint32_t *v) {
+	uint8_t b[4];
+
+	if (!xread(f, (char *)b, (int)sizeof(b))) {
+		return false;
+	}
+	*v = (uint32_t)b[0] | ((uint32_t)b[1] << 8) |
+	     ((uint32_t)b[2] << 16) | ((uint32_t)b[3] << 24);
+	return true;
+}
+
+static bool read_i32(FILE *f, int32_t *v) {
+	uint32_t uv;
+
+	if (!read_u32(f, &uv)) {
+		return false;
+	}
+	*v = (int32_t)uv;
+	return true;
+}
+
+static bool read_i64(FILE *f, int64_t *v) {
+	uint8_t b[8];
+	uint64_t uv;
+
+	if (!xread(f, (char *)b, (int)sizeof(b))) {
+		return false;
+	}
+	uv = (uint64_t)b[0] | ((uint64_t)b[1] << 8) |
+	     ((uint64_t)b[2] << 16) | ((uint64_t)b[3] << 24) |
+	     ((uint64_t)b[4] << 32) | ((uint64_t)b[5] << 40) |
+	     ((uint64_t)b[6] << 48) | ((uint64_t)b[7] << 56);
+	*v = (int64_t)uv;
+	return true;
+}
 
 void save_game(void) {
 	FILE *f; /* file to save game in */
 	bool ok = true;
+	int i, j;
 
-#define S_WBUF(buf)                                                            \
-	if (!xwrite(f, (char *)buf, sizeof(buf))) {                            \
+#define S_WBYTES(buf, size)                                                    \
+	if (!xwrite(f, (char *)buf, (int)(size))) {                             \
 		ok = false;                                                    \
 		goto save_cleanup;                                            \
 	}
-#define S_WVAL(val)                                                            \
-	if (!xwrite(f, (char *)&val, sizeof(val))) {                           \
+#define S_WU8(val)                                                             \
+	if (!write_u8(f, (uint8_t)(val))) {                                     \
+		ok = false;                                                    \
+		goto save_cleanup;                                            \
+	}
+#define S_WU32(val)                                                            \
+	if (!write_u32(f, (uint32_t)(val))) {                                   \
+		ok = false;                                                    \
+		goto save_cleanup;                                            \
+	}
+#define S_WI32(val)                                                            \
+	if (!write_i32(f, (int32_t)(val))) {                                    \
+		ok = false;                                                    \
+		goto save_cleanup;                                            \
+	}
+#define S_WI64(val)                                                            \
+	if (!write_i64(f, (int64_t)(val))) {                                    \
 		ok = false;                                                    \
 		goto save_cleanup;                                            \
 	}
@@ -565,23 +656,60 @@ void save_game(void) {
 		perror("Cannot save saved game");
 		return;
 	}
-	S_WBUF(SAVECOOKIE);
-	S_WBUF(game.real_map);
-	S_WBUF(game.comp_map);
-	S_WBUF(game.user_map);
-	S_WBUF(game.city);
-	S_WBUF(game.object);
-	S_WBUF(game.user_obj);
-	S_WBUF(game.comp_obj);
-	S_WVAL(game.free_list);
-	S_WVAL(game.date);
-	S_WVAL(game.automove);
-	S_WVAL(game.resigned);
-	S_WVAL(game.debug);
-	S_WVAL(game.win);
-	S_WVAL(game.save_movie);
-	S_WVAL(game.user_score);
-	S_WVAL(game.comp_score);
+
+	S_WBYTES(SAVE_MAGIC, SAVE_MAGIC_LEN);
+	S_WU32(SAVE_VERSION);
+	S_WU32(MAP_WIDTH);
+	S_WU32(MAP_HEIGHT);
+	S_WU32(MAP_SIZE);
+	S_WU32(NUM_CITY);
+	S_WU32(LIST_SIZE);
+	S_WU32(NUM_OBJECTS);
+
+	S_WI64(game.date);
+	S_WU8(game.automove);
+	S_WU8(game.resigned);
+	S_WU8(game.debug);
+	S_WI32(game.win);
+	S_WU8(game.save_movie);
+	S_WI32(game.user_score);
+	S_WI32(game.comp_score);
+
+	for (i = 0; i < MAP_SIZE; i++) {
+		S_WU8(game.real_map[i].contents);
+		S_WU8(game.real_map[i].on_board);
+	}
+
+	for (i = 0; i < MAP_SIZE; i++) {
+		S_WU8(game.comp_map[i].contents);
+		S_WI64(game.comp_map[i].seen);
+	}
+	for (i = 0; i < MAP_SIZE; i++) {
+		S_WU8(game.user_map[i].contents);
+		S_WI64(game.user_map[i].seen);
+	}
+
+	for (i = 0; i < NUM_CITY; i++) {
+		S_WI32(game.city[i].loc);
+		S_WU8(game.city[i].owner);
+		S_WI64(game.city[i].work);
+		S_WU8((uint8_t)game.city[i].prod);
+		for (j = 0; j < NUM_OBJECTS; j++) {
+			S_WI64(game.city[i].func[j]);
+		}
+	}
+
+	for (i = 0; i < LIST_SIZE; i++) {
+		piece_info_t *obj = &game.object[i];
+		S_WI32(obj->owner);
+		S_WI32(obj->type);
+		S_WI32(obj->loc);
+		S_WI64(obj->func);
+		S_WI32(obj->hits);
+		S_WI32(obj->moved);
+		S_WI32(obj->count);
+		S_WI32(obj->range);
+	}
 
 save_cleanup:
 	(void)fclose(f);
@@ -594,68 +722,165 @@ save_cleanup:
 		topmsg(3, "Save failed.");
 	}
 
-#undef S_WBUF
-#undef S_WVAL
+#undef S_WBYTES
+#undef S_WU8
+#undef S_WU32
+#undef S_WI32
+#undef S_WI64
 }
 
 /*
-Recover a saved game from emp_save.dat.
+Recover a saved game from empire.sav.
 We return true if we succeed, otherwise false.
 */
-
-#define rbuf(buf)                                                              \
-	if (!xread(f, (char *)buf, sizeof(buf)))                               \
-		goto restore_cleanup
-#define rval(val)                                                              \
-	if (!xread(f, (char *)&val, sizeof(val)))                              \
-		goto restore_cleanup
 
 int restore_game(void) {
 	void read_embark(piece_info_t *, int);
 
 	FILE *f; /* file to save game in */
 	long i;
+	int j;
 	piece_info_t **list;
 	piece_info_t *obj;
+	uint8_t v_u8;
+	uint32_t v_u32;
+	int32_t v_i32;
+	int64_t v_i64;
+	uint32_t map_width, map_height, map_size;
+	uint32_t num_city, list_size, num_objects;
+	char magic[SAVE_MAGIC_LEN];
 
 	f = fopen(game.savefile, "rb"); /* open for input */
 	if (f == NULL) {
 		perror("Cannot open saved game");
 		return false;
 	}
-	if (fgets(buf, sizeof(buf), f) == NULL) {
-		goto restore_cleanup;
-	} else if (strcmp(buf, SAVECOOKIE) != 0) {
-		goto restore_cleanup;
-	} else if (fread(buf, 1, sizeof(char), f) !=
-	           1) { /* skip trailing nul after cookie */
+#define R_RU8(dst)                                                             \
+	do {                                                                   \
+		if (!read_u8(f, &v_u8))                                        \
+			goto restore_cleanup;                                 \
+		dst = v_u8;                                                    \
+	} while (0)
+#define R_RU32(dst)                                                            \
+	do {                                                                   \
+		if (!read_u32(f, &v_u32))                                      \
+			goto restore_cleanup;                                 \
+		dst = v_u32;                                                   \
+	} while (0)
+#define R_RI32(dst)                                                            \
+	do {                                                                   \
+		if (!read_i32(f, &v_i32))                                      \
+			goto restore_cleanup;                                 \
+		dst = v_i32;                                                   \
+	} while (0)
+#define R_RI64(dst)                                                            \
+	do {                                                                   \
+		if (!read_i64(f, &v_i64))                                      \
+			goto restore_cleanup;                                 \
+		dst = v_i64;                                                   \
+	} while (0)
+
+	if (!xread(f, magic, (int)sizeof(magic))) {
 		goto restore_cleanup;
 	}
-	rbuf(game.real_map);
-	rbuf(game.comp_map);
-	rbuf(game.user_map);
-	rbuf(game.city);
-	rbuf(game.object);
-	rbuf(game.user_obj);
-	rbuf(game.comp_obj);
-	rval(game.free_list);
-	rval(game.date);
-	rval(game.automove);
-	rval(game.resigned);
-	rval(game.debug);
-	rval(game.win);
-	rval(game.save_movie);
-	rval(game.user_score);
-	rval(game.comp_score);
+	if (memcmp(magic, SAVE_MAGIC, sizeof(magic)) != 0) {
+		fprintf(stderr, "Saved file has unknown format.\n");
+		goto restore_cleanup;
+	}
+	R_RU32(v_u32);
+	if (v_u32 != SAVE_VERSION) {
+		fprintf(stderr, "Saved file version %u is not supported.\n",
+		        v_u32);
+		goto restore_cleanup;
+	}
+
+	R_RU32(map_width);
+	R_RU32(map_height);
+	R_RU32(map_size);
+	R_RU32(num_city);
+	R_RU32(list_size);
+	R_RU32(num_objects);
+
+	if (map_width != MAP_WIDTH || map_height != MAP_HEIGHT ||
+	    map_size != MAP_SIZE) {
+		fprintf(stderr,
+		        "Saved file map is %ux%u (size %u); this build uses %dx%d (size %d).\n",
+		        map_width, map_height, map_size, MAP_WIDTH, MAP_HEIGHT,
+		        MAP_SIZE);
+		goto restore_cleanup;
+	}
+	if (num_city != NUM_CITY || list_size != LIST_SIZE ||
+	    num_objects != NUM_OBJECTS) {
+		fprintf(stderr,
+		        "Saved file uses different limits (cities %u, objects %u, list %u).\n",
+		        num_city, num_objects, list_size);
+		goto restore_cleanup;
+	}
+
+	R_RI64(game.date);
+	R_RU8(game.automove);
+	R_RU8(game.resigned);
+	R_RU8(game.debug);
+	R_RI32(game.win);
+	R_RU8(game.save_movie);
+	R_RI32(game.user_score);
+	R_RI32(game.comp_score);
+
+	for (i = 0; i < MAP_SIZE; i++) {
+		R_RU8(game.real_map[i].contents);
+		R_RU8(game.real_map[i].on_board);
+		game.real_map[i].cityp = NULL;
+		game.real_map[i].objp = NULL;
+	}
+	for (i = 0; i < MAP_SIZE; i++) {
+		R_RU8(game.comp_map[i].contents);
+		R_RI64(game.comp_map[i].seen);
+	}
+	for (i = 0; i < MAP_SIZE; i++) {
+		R_RU8(game.user_map[i].contents);
+		R_RI64(game.user_map[i].seen);
+	}
+
+	for (i = 0; i < NUM_CITY; i++) {
+		R_RI32(game.city[i].loc);
+		R_RU8(game.city[i].owner);
+		R_RI64(game.city[i].work);
+		R_RU8(game.city[i].prod);
+		for (j = 0; j < NUM_OBJECTS; j++) {
+			R_RI64(game.city[i].func[j]);
+		}
+		if (game.city[i].owner != UNOWNED && game.city[i].owner != USER &&
+		    game.city[i].owner != COMP) {
+			fprintf(stderr, "Saved file has invalid city owner.\n");
+			goto restore_cleanup;
+		}
+	}
+
+	for (i = 0; i < LIST_SIZE; i++) {
+		obj = &(game.object[i]);
+		R_RI32(obj->owner);
+		R_RI32(obj->type);
+		R_RI32(obj->loc);
+		R_RI64(obj->func);
+		R_RI32(obj->hits);
+		R_RI32(obj->moved);
+		R_RI32(obj->count);
+		R_RI32(obj->range);
+		if (obj->owner != UNOWNED && obj->owner != USER &&
+		    obj->owner != COMP) {
+			fprintf(stderr, "Saved file has invalid object owner.\n");
+			goto restore_cleanup;
+		}
+		if (obj->hits < 0 || obj->count < 0) {
+			fprintf(stderr, "Saved file has invalid object data.\n");
+			goto restore_cleanup;
+		}
+	}
 
 	/* Our pointers may not be valid because of source
 	   changes or other things.  We recreate them. */
 
 	game.free_list = NULL; /* zero all ptrs */
-	for (i = 0; i < MAP_SIZE; i++) {
-		game.real_map[i].cityp = NULL;
-		game.real_map[i].objp = NULL;
-	}
 	for (i = 0; i < LIST_SIZE; i++) {
 		game.object[i].loc_link.next = NULL;
 		game.object[i].loc_link.prev = NULL;
@@ -672,6 +897,10 @@ int restore_game(void) {
 	}
 	/* put cities on game.real_map */
 	for (i = 0; i < NUM_CITY; i++) {
+		if (game.city[i].loc < 0 || game.city[i].loc >= MAP_SIZE) {
+			fprintf(stderr, "Saved file has invalid city location.\n");
+			goto restore_cleanup;
+		}
 		game.real_map[game.city[i].loc].cityp = &(game.city[i]);
 	}
 
@@ -682,6 +911,12 @@ int restore_game(void) {
 		    game.object[i].hits == 0) {
 			LINK(game.free_list, obj, piece_link);
 		} else {
+			if (obj->loc < 0 || obj->loc >= MAP_SIZE ||
+			    obj->type < 0 || obj->type >= NUM_OBJECTS) {
+				fprintf(stderr,
+				        "Saved file has invalid object data.\n");
+				goto restore_cleanup;
+			}
 			list = LIST(game.object[i].owner);
 			LINK(list[game.object[i].type], obj, piece_link);
 			LINK(game.real_map[game.object[i].loc].objp, obj,
@@ -703,6 +938,11 @@ int restore_game(void) {
 restore_cleanup:
 	(void)fclose(f);
 	return (false);
+
+#undef R_RU8
+#undef R_RU32
+#undef R_RI32
+#undef R_RI64
 }
 
 /*

@@ -576,7 +576,7 @@ attempting to move a fighter, and don't ask me about moves
 seven more times?
 
 3)  The program should use environment variables or command line
-arguments to supply the filenames for "empsave.dat" and "empmovie.dat".
+arguments to supply the filenames for "empire.sav" and "empmovie.dat".
 A command line argument would also be useful for telling the
 program how often the game should be saved.  Actually, all
 command line arguments should have associated environment variables

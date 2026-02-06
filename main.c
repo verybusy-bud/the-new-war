@@ -44,7 +44,7 @@ int main(int argc, char *argv[]) {
 	sflg = 5;
 	dflg = 2000;
 	Sflg = 10;
-	game.savefile = "empsave.dat";
+	game.savefile = "empire.sav";
 
 	/*
 	 * extract command line options

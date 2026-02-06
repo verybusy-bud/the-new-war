@@ -4,6 +4,8 @@ Repository head::
        Code hardening with ChatGPT 5.2
        Close off a whole bunch of potential buffer overruns.
        Bail out gracefully on failed memory allocations.
+       New versioned, field-wise save format with map dimensions recorded.
+       Default save file name is now empire.sav.
        Documentation is fully spellchecked.
 
 1.18: 2024-10-03::
