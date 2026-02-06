@@ -723,15 +723,15 @@ Also, tell the user why the write did not work if it didn't.
 */
 
 bool xwrite(FILE *f, char *buf, int size) {
-	int bytes;
+	size_t bytes;
 
 	bytes = fwrite(buf, 1, size, f);
-	if (bytes == -1) {
-		perror("Write to save file failed");
-		return (false);
-	}
 	if (bytes != size) {
-		perror("Cannot complete write to save file.\n");
+		if (ferror(f)) {
+			perror("Write to save file failed");
+		} else {
+			fprintf(stderr, "Cannot complete write to save file.\n");
+		}
 		return (false);
 	}
 	return (true);
@@ -743,15 +743,17 @@ and return false.
 */
 
 bool xread(FILE *f, char *buf, int size) {
-	int bytes;
+	size_t bytes;
 
 	bytes = fread(buf, 1, size, f);
-	if (bytes == -1) {
-		perror("Read from save file failed");
-		return (false);
-	}
 	if (bytes != size) {
-		perror("Saved file is too short.\n");
+		if (ferror(f)) {
+			perror("Read from save file failed");
+		} else if (feof(f)) {
+			fprintf(stderr, "Saved file is too short.\n");
+		} else {
+			fprintf(stderr, "Read from save file incomplete.\n");
+		}
 		return (false);
 	}
 	return (true);
