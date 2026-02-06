@@ -134,7 +134,7 @@ void make_map(void) {
 		height_count[i] = 0;
 	}
 
-	for (i = 0; i <= MAP_SIZE; i++) {
+	for (i = 0; i < MAP_SIZE; i++) {
 		height_count[height[from][i]]++;
 	}
 
