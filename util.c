@@ -70,6 +70,9 @@ void eassert(char *expression, char *file, int line) {
 	(void)buf_append(&cur, &rem, "assert failed: file %s line %d: %s", file,
 	                 line, expression);
 
+	fprintf(stderr, "%s\n", buf);
+	fflush(stderr);
+
 	kill(getpid(), SIGSEGV); /* core dump */
 }
 
