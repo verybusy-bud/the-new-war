@@ -536,10 +536,10 @@ tell the user why.
 /* macro to save typing; write an array, return if it fails */
 #define wbuf(buf)                                                              \
 	if (!xwrite(f, (char *)buf, sizeof(buf)))                              \
-	return
+		return
 #define wval(val)                                                              \
 	if (!xwrite(f, (char *)&val, sizeof(val)))                             \
-	return
+		return
 
 #define SAVECOOKIE "EMPSAVE 1\n" /* increase digit when format changes */
 
@@ -547,32 +547,55 @@ static char buf[32];
 
 void save_game(void) {
 	FILE *f; /* file to save game in */
+	bool ok = true;
+
+#define S_WBUF(buf)                                                            \
+	if (!xwrite(f, (char *)buf, sizeof(buf))) {                            \
+		ok = false;                                                    \
+		goto save_cleanup;                                            \
+	}
+#define S_WVAL(val)                                                            \
+	if (!xwrite(f, (char *)&val, sizeof(val))) {                           \
+		ok = false;                                                    \
+		goto save_cleanup;                                            \
+	}
 
 	f = fopen(game.savefile, "wb"); /* open for output */
 	if (f == NULL) {
 		perror("Cannot save saved game");
 		return;
 	}
-	wbuf(SAVECOOKIE);
-	wbuf(game.real_map);
-	wbuf(game.comp_map);
-	wbuf(game.user_map);
-	wbuf(game.city);
-	wbuf(game.object);
-	wbuf(game.user_obj);
-	wbuf(game.comp_obj);
-	wval(game.free_list);
-	wval(game.date);
-	wval(game.automove);
-	wval(game.resigned);
-	wval(game.debug);
-	wval(game.win);
-	wval(game.save_movie);
-	wval(game.user_score);
-	wval(game.comp_score);
+	S_WBUF(SAVECOOKIE);
+	S_WBUF(game.real_map);
+	S_WBUF(game.comp_map);
+	S_WBUF(game.user_map);
+	S_WBUF(game.city);
+	S_WBUF(game.object);
+	S_WBUF(game.user_obj);
+	S_WBUF(game.comp_obj);
+	S_WVAL(game.free_list);
+	S_WVAL(game.date);
+	S_WVAL(game.automove);
+	S_WVAL(game.resigned);
+	S_WVAL(game.debug);
+	S_WVAL(game.win);
+	S_WVAL(game.save_movie);
+	S_WVAL(game.user_score);
+	S_WVAL(game.comp_score);
 
+save_cleanup:
 	(void)fclose(f);
-	topmsg(3, "Game saved.");
+	if (ok) {
+		topmsg(3, "Game saved.");
+	} else {
+		if (remove(game.savefile) != 0) {
+			perror("Cannot remove partial save file");
+		}
+		topmsg(3, "Save failed.");
+	}
+
+#undef S_WBUF
+#undef S_WVAL
 }
 
 /*
@@ -582,10 +605,10 @@ We return true if we succeed, otherwise false.
 
 #define rbuf(buf)                                                              \
 	if (!xread(f, (char *)buf, sizeof(buf)))                               \
-		return (false);
+		goto restore_cleanup
 #define rval(val)                                                              \
 	if (!xread(f, (char *)&val, sizeof(val)))                              \
-		return (false);
+		goto restore_cleanup
 
 int restore_game(void) {
 	void read_embark(piece_info_t *, int);
@@ -601,15 +624,12 @@ int restore_game(void) {
 		return false;
 	}
 	if (fgets(buf, sizeof(buf), f) == NULL) {
-		fclose(f);
-		return false;
+		goto restore_cleanup;
 	} else if (strcmp(buf, SAVECOOKIE) != 0) {
-		fclose(f);
-		return false;
+		goto restore_cleanup;
 	} else if (fread(buf, 1, sizeof(char), f) !=
 	           1) { /* skip trailing nul after cookie */
-		fclose(f);
-		return false;
+		goto restore_cleanup;
 	}
 	rbuf(game.real_map);
 	rbuf(game.comp_map);
@@ -679,6 +699,10 @@ int restore_game(void) {
 	kill_display(); /* what we had is no longer good */
 	topmsg(3, "Game restored from save file.");
 	return (true);
+
+restore_cleanup:
+	(void)fclose(f);
+	return (false);
 }
 
 /*
