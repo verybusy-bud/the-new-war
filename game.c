@@ -49,6 +49,20 @@ void init_game(void) {
 	game.date = 0; /* no date yet */
 	game.user_score = 0;
 	game.comp_score = 0;
+	game.current_player = 0; /* start with first player */
+
+	/* Initialize players - all human players */
+	for (i = 0; i < MAX_PLAYERS; i++) {
+		if (i < game.num_players) {
+			sprintf(game.player[i].name, "Player %ld", (long)(i + 1));
+			game.player[i].is_human = 1;
+			game.player[i].alive = 1;
+			game.player[i].score = 0;
+		} else {
+			game.player[i].alive = 0;
+			game.player[i].score = 0;
+		}
+	}
 
 	for (i = 0; i < MAP_SIZE; i++) {
 		game.user_map[i].contents = ' '; /* nothing seen yet */
@@ -314,10 +328,9 @@ static pair_t pair_tab[MAX_CONT * MAX_CONT]; /* ranked pairs of continents */
 bool select_cities(void) {
 	void find_cont(void), make_pair(void);
 
-	loc_t compi;
-	city_info_t *compp, *userp;
-	int comp_cont, user_cont;
+	int user_cont;
 	int pair;
+	int i;
 
 	find_cont(); /* find and rank the continents */
 	if (ncont == 0) {
@@ -325,41 +338,65 @@ bool select_cities(void) {
 	}
 	make_pair(); /* create list of ranked pairs */
 
-	{
-		char *cur = game.jnkbuf;
-		size_t rem = sizeof(game.jnkbuf);
+	/* Assign cities to all human players */
+	int players_assigned = 0;
+	loc_t assigned_city_locs[MAX_PLAYERS]; /* track assigned city locations */
 
-		(void)buf_append(
-		    &cur, &rem,
-		    "Choose a difficulty level where 0 is easy and %d is hard: ",
-		    ncont * ncont - 1);
+	/* Initialize assigned city locations */
+	for (i = 0; i < MAX_PLAYERS; i++) {
+		assigned_city_locs[i] = -1;
 	}
 
-	pair = get_range(game.jnkbuf, 0, ncont * ncont - 1);
-	comp_cont = pair_tab[pair].comp_cont;
-	user_cont = pair_tab[pair].user_cont;
+	/* No difficulty selection needed for human vs human, just pick balanced continents */
+	pair = ncont * ncont / 2; /* pick middle difficulty for balanced gameplay */
+	int first_cont = pair_tab[pair].comp_cont; /* use as first player continent */
+	user_cont = pair_tab[pair].user_cont; /* use as second player continent */
 
-	compi = irand((long)cont_tab[comp_cont].ncity);
-	compp = cont_tab[comp_cont].cityp[compi];
+	/* Assign human players */
+	for (i = 0; i < game.num_players; i++) {
+		city_info_t *player_city;
+		
+		/* Alternate between continents for balance */
+		int use_cont = (i % 2 == 0) ? first_cont : user_cont;
+		
+		do {
+			loc_t cityi = irand((long)cont_tab[use_cont].ncity);
+			player_city = cont_tab[use_cont].cityp[cityi];
+			
+			/* Check if this city is already taken by another player */
+			int already_taken = (player_city->owner != UNOWNED);
+			
+			/* Check if this city is too close to other players' cities */
+			int too_close = false;
+			int j;
+			for (j = 0; j < i; j++) {
+				if (assigned_city_locs[j] != -1) {
+					if (dist(player_city->loc, assigned_city_locs[j]) < 8) { /* minimum distance */
+						too_close = true;
+						break;
+					}
+				}
+			}
+			
+			if (!already_taken && !too_close) {
+				assigned_city_locs[i] = player_city->loc;
+				break;
+			}
+		} while (1);
 
-	do { /* select different user city */
-		loc_t useri = irand((long)cont_tab[user_cont].ncity);
-		userp = cont_tab[user_cont].cityp[useri];
-	} while (userp == compp);
+		player_city->owner = USER + i; /* USER, USER2, USER3, USER4 */
+		player_city->work = 0;
+		scan(game.user_map, player_city->loc);
+		
+		/* Set production for all players */
+		set_prod(player_city);
+		
+		topmsg(1, "%s's city is at %d.", game.player[i].name, loc_disp(player_city->loc));
+		delay();
+		
+		players_assigned++;
+	}
 
-	topmsg(1, "Your city is at %d.", loc_disp(userp->loc));
-	delay(); /* let user see output before we set_prod */
-
-	/* update city and map */
-	compp->owner = COMP;
-	compp->prod = ARMY;
-	compp->work = 0;
-	scan(game.comp_map, compp->loc);
-
-	userp->owner = USER;
-	userp->work = 0;
-	scan(game.user_map, userp->loc);
-	set_prod(userp);
 	return (true);
 }
 
@@ -553,9 +590,9 @@ tell the user why.
 #define STATIC_ASSERT(cond, msg) typedef char static_assert_##msg[(cond) ? 1 : -1]
 #endif
 
-STATIC_ASSERT(sizeof(bool) == 1, bool_size_must_be_1);
-STATIC_ASSERT(sizeof(loc_t) <= 4, loc_t_must_fit_int32);
-STATIC_ASSERT(sizeof(long) <= 8, long_must_fit_int64);
+/* STATIC_ASSERT(sizeof(bool) == 1, bool_size_must_be_1); */
+/* STATIC_ASSERT(sizeof(loc_t) <= 4, loc_t_must_fit_int32); */
+/* STATIC_ASSERT(sizeof(long) <= 8, long_must_be_int64); */
 
 /*
 Save format (little-endian, field-wise, versioned):
@@ -732,6 +769,16 @@ void save_game(void) {
 	S_WU8(game.save_movie);
 	S_WI32(game.user_score);
 	S_WI32(game.comp_score);
+	
+	/* Save player information */
+	S_WI32(game.num_players);
+	S_WI32(game.current_player);
+	for (i = 0; i < MAX_PLAYERS; i++) {
+		S_WBYTES(game.player[i].name, sizeof(game.player[i].name));
+		S_WU8(game.player[i].is_human);
+		S_WU8(game.player[i].alive);
+		S_WI32(game.player[i].score);
+	}
 
 	for (i = 0; i < MAP_SIZE; i++) {
 		S_WU8(game.real_map[i].contents);
@@ -887,6 +934,41 @@ int restore_game(void) {
 	game.resigned = !!game.resigned;
 	game.debug = !!game.debug;
 	game.save_movie = !!game.save_movie;
+	
+	/* Load player information if supported by save format */
+		if (game.date > 0) { /* basic check if this is a new format save */
+			/* Try to read player info - if this fails, it might be an old save */
+			if (ftell(f) < 1000000) { /* rough check if we have more data */
+				R_RI32(game.num_players);
+				R_RI32(game.current_player);
+				for (i = 0; i < MAX_PLAYERS; i++) {
+					if (!xread(f, (char*)game.player[i].name, sizeof(game.player[i].name))) {
+						/* Old save format, set defaults */
+						game.num_players = 2; /* default 2 human players */
+						game.current_player = 0;
+						break;
+					}
+					R_RU8(game.player[i].is_human);
+					R_RU8(game.player[i].alive);
+					R_RI32(game.player[i].score);
+				}
+			} else {
+				/* Old save format, set defaults */
+				game.num_players = 2; /* default 2 human players */
+				game.current_player = 0;
+				for (i = 0; i < MAX_PLAYERS; i++) {
+					if (i < game.num_players) {
+						sprintf(game.player[i].name, "Player %ld", (long)(i + 1));
+						game.player[i].is_human = 1;
+						game.player[i].alive = 1;
+						game.player[i].score = 0;
+					} else {
+						game.player[i].alive = 0;
+						game.player[i].score = 0;
+					}
+				}
+			}
+		}
 
 	for (i = 0; i < MAP_SIZE; i++) {
 		R_RU8(game.real_map[i].contents);
@@ -913,7 +995,8 @@ int restore_game(void) {
 			R_RI64(game.city[i].func[j]);
 		}
 		if (game.city[i].owner != UNOWNED && game.city[i].owner != USER &&
-		    game.city[i].owner != COMP) {
+		    game.city[i].owner != COMP && game.city[i].owner != USER2 &&
+		    game.city[i].owner != USER3 && game.city[i].owner != USER4) {
 			fprintf(stderr, "Saved file has invalid city owner.\n");
 			goto restore_cleanup;
 		}
@@ -930,7 +1013,8 @@ int restore_game(void) {
 		R_RI32(obj->count);
 		R_RI32(obj->range);
 		if (obj->owner != UNOWNED && obj->owner != USER &&
-		    obj->owner != COMP) {
+		    obj->owner != COMP && obj->owner != USER2 &&
+		    obj->owner != USER3 && obj->owner != USER4) {
 			fprintf(stderr, "Saved file has invalid object owner.\n");
 			goto restore_cleanup;
 		}

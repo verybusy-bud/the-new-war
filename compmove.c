@@ -1107,67 +1107,118 @@ and armies as the user, then the computer will give up.
 */
 
 void check_endgame(void) {
-	int nuser_city, ncomp_city;
-	int nuser_army, ncomp_army;
-	piece_info_t *p;
 	int i;
+	int players_alive = 0;
+	int last_player = -1;
 
-	game.date += 1; /* one more turn has passed */
+	game.date += 1;
 	if (game.win != 0)
 		return; /* we already know game is over */
 
-	nuser_city = 0; /* nothing counted yet */
-	ncomp_city = 0;
-	nuser_army = 0;
-	ncomp_army = 0;
+	/* Count cities and armies for each active player */
+	players_alive = 0;
+	int player_city[MAX_PLAYERS];
+	int player_army[MAX_PLAYERS];
+	piece_info_t *p;
 
-	for (i = 0; i < NUM_CITY; i++) {
-		if (game.city[i].owner == USER)
-			nuser_city++;
-		else if (game.city[i].owner == COMP)
-			ncomp_city++;
+	/* Count cities for each player */
+	for (i = 0; i < MAX_PLAYERS; i++) {
+		player_city[i] = 0;
+		player_army[i] = 0;
 	}
 
-	for (p = game.user_obj[ARMY]; p != NULL; p = p->piece_link.next)
-		nuser_army++;
+	/* Count cities for each player */
+	for (i = 0; i < NUM_CITY; i++) {
+		if (game.city[i].owner >= USER && game.city[i].owner <= USER4 && game.player[game.city[i].owner - USER].alive)
+			player_city[game.city[i].owner - USER]++;
+	}
 
-	for (p = game.comp_obj[ARMY]; p != NULL; p = p->piece_link.next)
-		ncomp_army++;
+	/* Count armies for each player */
+	for (i = 0; i < NUM_OBJECTS; i++) {
+		for (p = game.user_obj[i]; p != NULL; p = p->piece_link.next) {
+			if (p->owner >= USER && p->owner <= USER4 && game.player[p->owner - USER].alive) {
+				if (p->type == ARMY) {
+					player_army[p->owner - USER]++;
+				}
+			}
+		}
+	}
 
-	if (ncomp_city < nuser_city / 3 && ncomp_army < nuser_army / 3) {
-		clear_screen();
-		prompt("The computer acknowledges defeat. Do");
-		ksend("The computer acknowledges defeat.");
-		error("you wish to smash the rest of the enemy?");
+	/* Check for winner - last player standing */
+	players_alive = 0;
+	for (i = 0; i < game.num_players; i++) {
+		if (game.player[i].alive) {
+			players_alive++;
+			last_player = i;
+		}
+	}
 
-		if (get_chx() != 'Y')
-			empend();
-		announce(
-		    "\nThe enemy inadvertantly revealed its code used for");
-		announce(
-		    "\nreceiving battle information. You can display what");
-		announce("\nthey've learned with the ''E'' command.");
-		game.resigned = true;
-		game.win = ratio_win;
-		game.automove = false;
-	} else if (ncomp_city == 0 && ncomp_army == 0) {
-		clear_screen();
-		announce("The enemy is incapable of defeating you.\n");
-		announce("You are free to rape the empire as you wish.\n");
-		announce(
-		    "There may be, however, remnants of the enemy fleet\n");
-		announce("to be routed out and destroyed.\n");
-		game.win = wipeout_win;
-		game.automove = false;
-	} else if (nuser_city == 0 && nuser_army == 0) {
-		clear_screen();
-		announce("You have been rendered incapable of\n");
-		announce("defeating the rampaging enemy fascists! The\n");
-		announce("empire is lost. If you have any ships left, you\n");
-		announce("may attempt to harass enemy shipping.");
-		game.win = 1;
-		game.automove = false;
+	/* Check for player elimination */
+	for (i = 0; i < game.num_players; i++) {
+		if (game.player[i].alive && player_city[i] == 0 && player_army[i] == 0) {
+			/* Player is eliminated */
+			game.player[i].alive = false;
+			sprintf(game.jnkbuf, "%s has been eliminated from the game.\n", game.player[i].name);
+			announce(game.jnkbuf);
+		}
+	}
+
+	/* Check for winner - last player standing */
+	players_alive = 0;
+	for (i = 0; i < game.num_players; i++) {
+		if (game.player[i].alive) {
+			players_alive++;
+			last_player = i;
+		}
+	}
+
+	if (players_alive == 1) {
+		/* We have a winner */
+		game.win = 1; /* human victory */
+		sprintf(game.jnkbuf, "%s has won the game!\n", game.player[last_player].name);
+		announce(game.jnkbuf);
+	}
+
+	/* Check for computer surrender (if any human players are alive) */
+	int human_players_alive = 0;
+	int comp_cities = 0;
+	int comp_armies = 0;
+
+	for (i = 0; i < game.num_players; i++) {
+		if (game.player[i].alive && i < 4) {
+			human_players_alive++;
+		}
+	}
+
+	/* Count computer forces */
+	for (i = 0; i < NUM_CITY; i++) {
+		if (game.city[i].owner == COMP)
+			comp_cities++;
+	}
+
+	for (i = 0; i < NUM_OBJECTS; i++) {
+		for (p = game.comp_obj[i]; p != NULL; p = p->piece_link.next) {
+			if (p->type == ARMY)
+				comp_armies++;
+		}
+	}
+
+	/* Computer surrenders if overwhelmed */
+	if (human_players_alive > 0 && comp_cities > 0 && comp_armies > 0) {
+		int total_human_cities = 0;
+		int total_human_armies = 0;
+		
+		for (i = 0; i < game.num_players && i < 4; i++) {
+			if (game.player[i].alive) {
+				total_human_cities += player_city[i];
+				total_human_armies += player_army[i];
+			}
+		}
+
+		if (comp_cities * 2 < total_human_cities && comp_armies * 2 < total_human_armies) {
+			game.win = 1; /* human victory */
+			sprintf(game.jnkbuf, "The computer acknowledges defeat.\n");
+			announce(game.jnkbuf);
+		}
 	}
 }
-
-/* end */

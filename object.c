@@ -222,7 +222,12 @@ void kill_city(city_info_t *cityp) {
 			}
 			list = LIST(p->owner);
 			UNLINK(list[p->type], p, piece_link);
-			p->owner = (p->owner == USER ? COMP : USER);
+			if (p->owner == USER)
+				p->owner = COMP;
+			else if (p->owner == COMP)
+				p->owner = USER;
+			else if (p->owner >= USER2 && p->owner <= USER4)
+				p->owner = COMP; /* Human units become computer when city captured */
 			list = LIST(p->owner);
 			LINK(list[p->type], p, piece_link);
 
@@ -546,7 +551,7 @@ contents starting with armies, then fighters, then boats, and the
 city type.
 */
 
-char city_char[] = {MAP_CITY, 'O', 'X'};
+char city_char[] = {MAP_CITY, '1', '2', '3', '4', 'X'};
 
 void update(view_map_t vmap[], loc_t loc) {
 	vmap[loc].seen = game.date;
@@ -559,7 +564,7 @@ void update(view_map_t vmap[], loc_t loc) {
 
 		if (p == NULL) /* nothing here? */
 			vmap[loc].contents = game.real_map[loc].contents;
-		else if (p->owner == USER)
+		else if (p->owner >= USER && p->owner <= USER4)
 			vmap[loc].contents = piece_attr[p->type].sname;
 		else
 			vmap[loc].contents = tolower(piece_attr[p->type].sname);

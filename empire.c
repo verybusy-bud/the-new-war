@@ -17,7 +17,7 @@ parser, and the simple commands.
 
 gamestate_t game;
 
-void c_examine(void), c_movie(void);
+void c_examine(void), c_movie(void), check_endgame(void);
 
 /*
  * 03a 01Apr88 aml .Hacked movement algorithms for computer.
@@ -47,20 +47,62 @@ void empire(void) {
 	}
 
 	/* Command loop starts here. */
-
 	for (;;) {                   /* until user quits */
 		if (game.automove) { /* don't ask for cmd in auto mode */
-			user_move();
-			comp_move(1);
-			if (++turn % game.save_interval == 0) {
-				save_game();
+			/* Process all player turns in automove mode */
+			int players_processed = 0;
+			
+			/* Start from current player, not from beginning */
+			int start_player = game.current_player;
+			
+			for (int i = 0; i < game.num_players; i++) {
+				int player_idx = (start_player + i) % game.num_players;
+				if (game.player[player_idx].alive) {
+					game.current_player = player_idx;
+					user_move();
+					players_processed++;
+				}
+			}
+			
+			/* Check if game is over after all players have moved */
+			check_endgame();
+			
+			/* Check if game is over */
+			if (players_processed <= 1 || game.win != no_win) {
+				/* If 1 or 0 players left, exit automove */
+				game.automove = false;
+				game.current_player = start_player; /* restore current player before continuing */
+				continue; /* Skip to next iteration and exit the for loop */
+			} else {
+				game.current_player = start_player; /* reset to original player */
+				if (++turn % game.save_interval == 0) {
+					save_game();
+				}
+				continue; /* Continue to next iteration to check for keyboard input */
 			}
 		} else {
 			prompt(""); /* blank top line */
 			redisplay();
-			prompt("Your orders? ");
-			order = get_chx(); /* get a command */
-			do_command(order);
+			
+			/* Display whose turn it is */
+			if (game.player[game.current_player].alive) {
+				prompt("%s's orders? ", game.player[game.current_player].name);
+				order = get_chx(); /* get a command */
+				do_command(order);
+			}
+			
+			/* Check if game is over after each turn */
+			check_endgame();
+			
+			/* Move to next player */
+			game.current_player++;
+			if (game.current_player >= game.num_players) {
+				game.current_player = 0; /* back to first player */
+				turn++;
+				if (turn % game.save_interval == 0) {
+					save_game();
+				}
+			}
 		}
 	}
 }
@@ -78,37 +120,38 @@ void do_command(char orders) {
 	switch (orders) {
 	case 'A': /* turn on auto move mode */
 		game.automove = true;
-		error("Now in Auto-Mode");
-		user_move();
-		comp_move(1);
+		error("Now in Auto-Mode for all players");
 		save_game();
 		break;
 
-	case 'C': /* give a city to the computer */
-		c_give();
+	case 'C': /* show cities */
+		c_sector();
 		break;
 
 	case 'D': /* display round number */
 		error("Round #%d", game.date);
 		break;
 
-	case 'E': /* examine enemy map */
-		if (game.resigned)
-			c_examine();
-		else
-			huh(); /* illegal command */
+	case 'E': /* end turn - force immediate advancement */
+		error("Ending %s's turn", game.player[game.current_player].name);
+		/* Increment now to avoid double increment in main loop */
+		game.current_player++; 
 		break;
 
 	case 'F': /* print map to file */
 		c_map();
 		break;
 
-	case 'G': /* give one free enemy move */
-		comp_move(1);
+	case 'G': /* game info */
+		error("Players: %d, Current: %s", game.num_players, game.player[game.current_player].name);
 		break;
 
 	case 'H': /* help */
 		help(help_cmd, cmd_lines);
+		break;
+
+	case 'I': /* info about current player */
+		error("Current player: %s", game.player[game.current_player].name);
 		break;
 
 	case 'J': /* edit mode */
@@ -120,14 +163,15 @@ void do_command(char orders) {
 
 	case 'M': /* move */
 		user_move();
-		comp_move(1);
 		save_game();
 		break;
 
-	case 'N': /* give enemy free moves */
-		ncycle = getint("Number of free enemy moves: ");
-		comp_move(ncycle);
-		save_game();
+	case 'N': /* next player */
+		error("Moving to next player");
+		break;
+
+	case 'Y': /* end turn */
+		error("Ending %s's turn", game.player[game.current_player].name);
 		break;
 
 	case 'P': /* print a sector */

@@ -50,6 +50,7 @@ extern char *help_user[];
 extern int cmd_lines;
 extern int edit_lines;
 extern int user_lines;
+extern void check_endgame(void);
 
 /* Screen updating macros */
 #define display_loc_u(loc) display_loc(USER, game.user_map, loc)

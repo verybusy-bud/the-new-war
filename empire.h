@@ -54,6 +54,10 @@ typedef long count_t; /* for iterating over or counting board locations */
 #define UNOWNED 0
 #define USER 1
 #define COMP 2
+#define USER2 3
+#define USER3 4
+#define USER4 5
+#define MAX_PLAYERS 6
 
 /* Piece types. */
 #define ARMY 0
@@ -164,8 +168,14 @@ Macros to link and unlink an object from a doubly linked list.
 	}
 
 /* macros to set map and list of an object */
-#define MAP(owner) ((owner) == USER ? game.user_map : game.comp_map)
-#define LIST(owner) ((owner) == USER ? game.user_obj : game.comp_obj)
+#define MAP(owner) (((owner) == USER || (owner) == USER2 || (owner) == USER3 || (owner) == USER4) ? game.user_map : game.comp_map)
+#define LIST(owner) (((owner) == USER || (owner) == USER2 || (owner) == USER3 || (owner) == USER4) ? game.user_obj : game.comp_obj)
+#define IS_HUMAN(owner) ((owner) >= USER && (owner) <= USER4)
+#define CURRENT_PLAYER() (USER + game.current_player)
+#define IS_ATTACKER_HUMAN(att_owner) ((att_owner) >= USER && (att_owner) <= USER4)
+#define IS_DEFENDER_HUMAN(def_owner) ((def_owner) >= USER && (def_owner) <= USER4)
+#define HUMAN_NAME(owner) ((owner) == USER ? "Player 1" : (owner) == USER2 ? "Player 2" : (owner) == USER3 ? "Player 3" : (owner) == USER4 ? "Player 4" : "Unknown"))
+#define PLAYER_COLOR(owner) ((owner) == USER ? COLOR_RED : (owner) == USER2 ? COLOR_BLUE : (owner) == USER3 ? COLOR_YELLOW : (owner) == USER4 ? COLOR_MAGENTA : COLOR_WHITE)
 
 /* macro to step through adjacent cells */
 #define FOR_ADJ(loc, new_loc, i)                                               \
@@ -287,12 +297,24 @@ enum win_t { no_win, wipeout_win, ratio_win };
 #define MAP_CITY '*'
 
 typedef struct {
+	char name[20];    /* player name */
+	int is_human;     /* 1 if human, 0 if computer */
+	int alive;        /* 1 if player still in game */
+	int score;        /* player score */
+} player_info_t;
+
+typedef struct {
 	/* user-supplied parameters */
 	int SMOOTH;        /* number of times to smooth map */
 	int WATER_RATIO;   /* percentage of map that is water */
 	int MIN_CITY_DIST; /* cities must be at least this far apart */
 	int delay_time;
 	int save_interval; /* turns between autosaves */
+
+	/* game state */
+	int num_players;           /* number of players in game */
+	int current_player;         /* current player index (0-based) */
+	player_info_t player[MAX_PLAYERS]; /* player information */
 
 	/* the world */
 	real_map_t real_map[MAP_SIZE]; /* the way the world really looks */

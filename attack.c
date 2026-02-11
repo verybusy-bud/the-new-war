@@ -39,16 +39,23 @@ void attack_city(piece_info_t *att_obj, loc_t loc) {
 	city_owner = cityp->owner;
 
 	if (irand(2) == 0) { /* attack fails? */
-		if (att_owner == USER) {
-			comment("The scum defending the city crushed your "
+		if (IS_ATTACKER_HUMAN(att_owner) && IS_DEFENDER_HUMAN(city_owner)) {
+			comment("The army defending the city crushed your "
 			        "attacking blitzkrieger.");
-			ksend("The scum defending the city crushed your "
+			ksend("The army defending the city crushed your "
 			      "attacking blitzkrieger.\n"); // kermyt
-		} else if (city_owner == USER) {
-			ksend("Your city at %d is under attack.\n",
-			      loc_disp(cityp->loc)); // kermyt
-			comment("Your city at %d is under attack.",
-			        loc_disp(cityp->loc));
+		} else if (IS_ATTACKER_HUMAN(att_owner) || IS_DEFENDER_HUMAN(city_owner)) {
+			if (IS_ATTACKER_HUMAN(att_owner)) {
+				ksend("Your city at %d is under attack.\n",
+				      loc_disp(cityp->loc)); // kermyt
+				comment("Your city at %d is under attack.",
+				        loc_disp(cityp->loc));
+			} else {
+				ksend("City at %d is under attack.\n",
+				      loc_disp(cityp->loc)); // kermyt
+				comment("Your city at %d is under attack.",
+				        loc_disp(cityp->loc));
+			}
 		}
 		kill_obj(att_obj, loc);
 	} else { /* attack succeeded */
@@ -56,7 +63,7 @@ void attack_city(piece_info_t *att_obj, loc_t loc) {
 		cityp->owner = att_owner;
 		kill_obj(att_obj, loc);
 
-		if (att_owner == USER) {
+		if (IS_ATTACKER_HUMAN(att_owner)) {
 			ksend("City at %d has been subjugated!\n",
 			      loc_disp(cityp->loc)); // kermyt
 			error("City at %d has been subjugated!",
@@ -67,10 +74,10 @@ void attack_city(piece_info_t *att_obj, loc_t loc) {
 			ksend("Your army has been dispersed to enforce "
 			      "control.\n");
 			set_prod(cityp);
-		} else if (city_owner == USER) {
-			ksend("City at %d has been lost to the enemy!\n",
+		} else if (IS_DEFENDER_HUMAN(city_owner)) {
+			ksend("City at %d has been lost to enemy!\n",
 			      loc_disp(cityp->loc)); // kermyt
-			comment("City at %d has been lost to the enemy!",
+			comment("Your city at %d has been lost to enemy!",
 			        loc_disp(cityp->loc));
 		}
 	}

@@ -22,6 +22,8 @@ options:
 
     -S saveinterval: sets turn interval between saves.
                default is 10
+
+    -p players: number of human players (1-4).  Default is 1.
 */
 
 #include "empire.h"
@@ -30,20 +32,21 @@ options:
 #include <stdlib.h>
 #include <unistd.h>
 
-#define OPTFLAGS "w:s:d:S:f:"
+#define OPTFLAGS "w:s:d:S:f:p:"
 
 int main(int argc, char *argv[]) {
 	int c;
 	extern char *optarg;
 	extern int optind;
 	int errflg = 0;
-	int wflg, sflg, dflg, Sflg;
+	int wflg, sflg, dflg, Sflg, pflg;
 	int land;
 
 	wflg = 70; /* set defaults */
 	sflg = 5;
 	dflg = 2000;
 	Sflg = 10;
+	pflg = 2; /* default to 2 players for hotseat */
 	game.savefile = "empire.sav";
 
 	/*
@@ -67,6 +70,9 @@ int main(int argc, char *argv[]) {
 		case 'f':
 			game.savefile = optarg;
 			break;
+		case 'p':
+			pflg = atoi(optarg);
+			break;
 		case '?': /* illegal option? */
 			errflg++;
 			break;
@@ -74,7 +80,7 @@ int main(int argc, char *argv[]) {
 	}
 	if (errflg || (argc - optind) != 0) {
 		(void)printf("empire: usage: empire [-w water] [-s smooth] [-d "
-		             "delay]\n");
+		             "delay] [-p players] [-f savefile]\n");
 		exit(1);
 	}
 
@@ -95,10 +101,17 @@ int main(int argc, char *argv[]) {
 		exit(1);
 	}
 
+	if (pflg < 1 || pflg > 4) {
+		(void)printf(
+		    "empire: -p argument must be in the range 1..4.\n");
+		exit(1);
+	}
+
 	game.SMOOTH = sflg;
 	game.WATER_RATIO = wflg;
 	game.delay_time = dflg;
 	game.save_interval = Sflg;
+	game.num_players = pflg;
 
 	/* compute min distance between cities */
 	land = MAP_SIZE * (100 - game.WATER_RATIO) / 100; /* available land */

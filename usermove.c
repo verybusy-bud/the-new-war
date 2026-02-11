@@ -36,18 +36,22 @@ void user_move(void) {
 	   also scan through all cities before possibly asking the
 	   user what to produce in each city. */
 
+	int current_owner = CURRENT_PLAYER();
+	
 	for (i = 0; i < NUM_OBJECTS; i++) {
 		for (obj = game.user_obj[i]; obj != NULL;
 		     obj = obj->piece_link.next) {
-			obj->moved = 0; /* nothing moved yet */
-			scan(game.user_map,
-			     obj->loc); /* refresh user's view of world */
+			if (obj->owner == current_owner) {
+				obj->moved = 0; /* nothing moved yet */
+				scan(game.user_map,
+				     obj->loc); /* refresh user's view of world */
+			}
 		}
 	}
 
 	/* produce new hardware */
 	for (i = 0; i < NUM_CITY; i++) {
-		if (game.city[i].owner == USER) {
+		if (game.city[i].owner == current_owner) {
 			scan(game.user_map, game.city[i].loc);
 			prod = game.city[i].prod;
 
@@ -74,7 +78,9 @@ void user_move(void) {
 	/* move all satellites */
 	for (obj = game.user_obj[SATELLITE]; obj != NULL; obj = next_obj) {
 		next_obj = obj->piece_link.next;
-		move_sat(obj);
+		if (obj->owner == current_owner) {
+			move_sat(obj);
+		}
 	}
 
 	sec_start = cur_sector(); /* get currently displayed sector */
@@ -92,7 +98,7 @@ void user_move(void) {
 			     obj = next_obj) { /* loop through objs in list */
 				next_obj = obj->piece_link.next;
 
-				if (!obj->moved) { /* object not moved yet? */
+				if (!obj->moved && obj->owner == current_owner) { /* object not moved yet? */
 					if (loc_sector(obj->loc) ==
 					    sec) { /* object in sector? */
 						piece_move(
