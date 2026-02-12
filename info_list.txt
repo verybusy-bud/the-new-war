@@ -591,3 +591,19 @@ Your army has been dispersed to enforce control.
 an army has been completed at city 222.
 The army defending the city crushed your attacking blitzkrieger.
 an army has been completed at city 241.
+an army has been completed at city 4249.
+an army has been completed at city 2649.
+an army has been completed at city 1738.
+an army has been completed at city 3638.
+an army has been completed at city 2649.
+City at 2443 has been subjugated!
+Your army has been dispersed to enforce control.
+an army has been completed at city 1738.
+an army has been completed at city 3638.
+an army has been completed at city 4249.
+Your city at 4131 is under attack.
+an army has been completed at city 1738.
+an army has been completed at city 3638.
+an army has been completed at city 4249.
+an army has been completed at city 2649.
+The army defending the city crushed your attacking blitzkrieger.

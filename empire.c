@@ -17,7 +17,7 @@ parser, and the simple commands.
 
 gamestate_t game;
 
-void c_examine(void), c_movie(void), check_endgame(void);
+void c_examine(void), c_movie(void), check_endgame(void), show_title(void);
 
 /*
  * 03a 01Apr88 aml .Hacked movement algorithms for computer.
@@ -37,7 +37,8 @@ void empire(void) {
 	ttinit(); /* init tty */
 	rndini(); /* init random number generator */
 
-
+	/* Show title screen with player colors */
+	show_title();
 
 	if (!restore_game()) /* try to restore previous game */ {
 		init_game(); /* otherwise init a new game */

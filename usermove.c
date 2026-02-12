@@ -973,8 +973,16 @@ necessary, and attack if necessary.
 */
 
 void user_dir_army(piece_info_t *obj, loc_t loc) {
-	if (game.user_map[loc].contents == 'O') { /* attacking own city */
+	city_info_t *cityp = find_city(loc);
+	
+	if (game.user_map[loc].contents == 'O' && 
+	    cityp && cityp->owner == CURRENT_PLAYER()) { /* attacking own city */
 		move_army_to_city(obj, loc);
+	}
+	
+	else if (game.user_map[loc].contents == 'O' && 
+	         cityp && cityp->owner != CURRENT_PLAYER()) { /* attacking enemy city */
+		attack(obj, loc);
 	}
 
 	else if (game.user_map[loc].contents == 'T') { /* transport full? */
