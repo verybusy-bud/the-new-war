@@ -50,6 +50,7 @@ extern char *help_user[];
 extern int cmd_lines;
 extern int edit_lines;
 extern int user_lines;
+extern void check_endgame(void);
 
 /* Screen updating macros */
 #define display_loc_u(loc) display_loc(USER, game.user_map, loc)
@@ -128,9 +129,7 @@ void print_zoom(view_map_t *vmap);
 void print_pzoom(char *s, path_map_t *pmap, view_map_t *vmap);
 void print_xzoom(view_map_t *vmap);
 void display_score(void);
-#ifdef A_COLOR
 void init_colors(void);
-#endif /* A_COLOR */
 void redraw(void);
 void clear_screen(void);
 void complain(void);

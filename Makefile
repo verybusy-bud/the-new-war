@@ -56,10 +56,10 @@ OFILES = \
 	usermove.o \
 	util.o
 
-all: vms-empire
+all: tnw
 
-vms-empire: $(OFILES)
-	$(CC) $(PROFILE) -o vms-empire $(OFILES) $(LIBS)
+tnw: $(OFILES)
+	$(CC) $(PROFILE) -o tnw $(OFILES) $(LIBS)
 
 attack.o:: extern.h empire.h
 compmove.o:: extern.h empire.h
@@ -114,8 +114,9 @@ uninstall:
 	rm -f /usr/share/appdata/vms-empire.xml
 
 clean:
-	rm -f *.o TAGS vms-empire
+	rm -f *.o TAGS tnw
 	rm -f *.6 *.html
+	rm -f *.sav
 
 reflow:
 	@clang-format --style="{IndentWidth: 8, UseTab: ForIndentation}" -i $$(find . -name "*.[ch]")

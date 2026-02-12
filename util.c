@@ -157,7 +157,7 @@ void check(void) {
 		     p = p->loc_link.next) {
 			ASSERT(p->loc == i);
 			ASSERT(p->hits > 0);
-			ASSERT(p->owner == USER || p->owner == COMP);
+			ASSERT(p->owner == USER || p->owner == COMP || p->owner == USER2 || p->owner == USER3 || p->owner == USER4);
 
 			j = p - game.object;
 			ASSERT(!in_loc[j]);

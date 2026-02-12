@@ -36,18 +36,22 @@ void user_move(void) {
 	   also scan through all cities before possibly asking the
 	   user what to produce in each city. */
 
+	int current_owner = CURRENT_PLAYER();
+	
 	for (i = 0; i < NUM_OBJECTS; i++) {
 		for (obj = game.user_obj[i]; obj != NULL;
 		     obj = obj->piece_link.next) {
-			obj->moved = 0; /* nothing moved yet */
-			scan(game.user_map,
-			     obj->loc); /* refresh user's view of world */
+			if (obj->owner == current_owner) {
+				obj->moved = 0; /* nothing moved yet */
+				scan(game.user_map,
+				     obj->loc); /* refresh user's view of world */
+			}
 		}
 	}
 
 	/* produce new hardware */
 	for (i = 0; i < NUM_CITY; i++) {
-		if (game.city[i].owner == USER) {
+		if (game.city[i].owner == current_owner) {
 			scan(game.user_map, game.city[i].loc);
 			prod = game.city[i].prod;
 
@@ -74,7 +78,9 @@ void user_move(void) {
 	/* move all satellites */
 	for (obj = game.user_obj[SATELLITE]; obj != NULL; obj = next_obj) {
 		next_obj = obj->piece_link.next;
-		move_sat(obj);
+		if (obj->owner == current_owner) {
+			move_sat(obj);
+		}
 	}
 
 	sec_start = cur_sector(); /* get currently displayed sector */
@@ -92,7 +98,7 @@ void user_move(void) {
 			     obj = next_obj) { /* loop through objs in list */
 				next_obj = obj->piece_link.next;
 
-				if (!obj->moved) { /* object not moved yet? */
+				if (!obj->moved && obj->owner == current_owner) { /* object not moved yet? */
 					if (loc_sector(obj->loc) ==
 					    sec) { /* object in sector? */
 						piece_move(
@@ -943,7 +949,7 @@ void user_dir(piece_info_t *obj, int dir) {
 		return;
 	}
 	if (!game.real_map[loc].on_board) {
-		error("You cannot move to the edge of the world.");
+		error("That is the edge of the battlefield, sir.");
 		delay();
 		return;
 	}
@@ -967,13 +973,19 @@ necessary, and attack if necessary.
 */
 
 void user_dir_army(piece_info_t *obj, loc_t loc) {
-	if (game.user_map[loc].contents == 'O') { /* attacking own city */
+	city_info_t *cityp = find_city(loc);
+	
+	if (cityp && cityp->owner == CURRENT_PLAYER()) { /* attacking own city */
 		move_army_to_city(obj, loc);
+	}
+	
+	else if (cityp && cityp->owner != CURRENT_PLAYER()) { /* attacking enemy city */
+		attack(obj, loc);
 	}
 
 	else if (game.user_map[loc].contents == 'T') { /* transport full? */
 		fatal(obj, loc,
-		      "Sorry, sir.  There is no more room on the transport.  "
+		      "Sir.  There is no more room on the transport.  "
 		      "Do you insist? ",
 		      "Your army jumped into the briny and drowned.");
 	}
@@ -1016,17 +1028,15 @@ void user_dir_army(piece_info_t *obj, loc_t loc) {
 		}
 	}
 
-	else if (isupper(game.user_map[loc].contents) &&
-	         game.user_map[loc].contents != 'X') { /* attacking self */
-		if (!getyn("Sir, those are our men!  Do you really want to "
-		           "attack them? ")) {
-			return;
-		}
-
-		attack(obj, loc);
-	}
-
 	else {
+		piece_info_t *def_obj = find_obj_at_loc(loc);
+		if (def_obj && def_obj->owner == CURRENT_PLAYER()) { /* attacking self */
+			if (!getyn("Sir, those are our men!  Do you really want to "
+			           "attack them? ")) {
+				return;
+			}
+		}
+		/* otherwise, it's an enemy (human or computer) - attack! */
 		attack(obj, loc);
 	}
 }
@@ -1039,21 +1049,20 @@ three cases:  attacking a city, attacking ourself, attacking the enemy.
 void user_dir_fighter(piece_info_t *obj, loc_t loc) {
 	if (game.real_map[loc].contents == MAP_CITY) {
 		fatal(obj, loc,
-		      "That's never worked before, sir.  Do you really want to "
+		      "That's a new strategy, sir.  Do you really want to "
 		      "try? ",
 		      "Your fighter was shot down.");
 	}
 
-	else if (isupper(game.user_map[loc].contents)) {
-		if (!getyn("Sir, those are our men!  "
-		           "Do you really want to attack them? ")) {
-			return;
-		}
-
-		attack(obj, loc);
-	}
-
 	else {
+		piece_info_t *def_obj = find_obj_at_loc(loc);
+		if (def_obj && def_obj->owner == CURRENT_PLAYER()) { /* attacking self */
+			if (!getyn("Sir, those are our men!  "
+			           "Do you really want to strafe them? ")) {
+				return;
+			}
+		}
+		/* otherwise, it's an enemy - attack! */
 		attack(obj, loc);
 	}
 }
@@ -1073,7 +1082,7 @@ void user_dir_ship(piece_info_t *obj, loc_t loc) {
 		                 piece_attr[obj->type].name);
 
 		fatal(obj, loc,
-		      "That's never worked before, sir.  Do you really want to "
+		      "That's a new strategy, sir.  Do you really want to "
 		      "try? ",
 		      game.jnkbuf);
 	}
@@ -1113,16 +1122,15 @@ void user_dir_ship(piece_info_t *obj, loc_t loc) {
 		}
 	}
 
-	else if (isupper(game.user_map[loc].contents)) { /* attacking self */
-		if (!getyn("Sir, those are our men!  Do you really want to "
-		           "attack them? ")) {
-			return;
-		}
-
-		attack(obj, loc);
-	}
-
 	else {
+		piece_info_t *def_obj = find_obj_at_loc(loc);
+		if (def_obj && def_obj->owner == CURRENT_PLAYER()) { /* attacking self */
+			if (!getyn("Sir, those are Allies!  Do you really want to "
+			           "attack them? ")) {
+				return;
+			}
+		}
+		/* otherwise, it's an enemy - attack! */
 		attack(obj, loc);
 	}
 }
@@ -1138,14 +1146,13 @@ void move_army_to_city(piece_info_t *obj, loc_t city_loc) {
 
 	tt = find_nfull(TRANSPORT, city_loc);
 
-	if (tt != NULL) {
+	if (tt != NULL && tt->owner == CURRENT_PLAYER()) {
 		move_obj(obj, city_loc);
 	}
 
 	else {
 		fatal(obj, city_loc,
-		      "That's our city, sir!  Do you really want to attack the "
-		      "garrison? ",
+		      "That's an Allied city, sir! Are you sure you want to revolt?",
 		      "Your rebel army was liquidated.");
 	}
 }
