@@ -175,7 +175,7 @@ Macros to link and unlink an object from a doubly linked list.
 #define IS_ATTACKER_HUMAN(att_owner) ((att_owner) >= USER && (att_owner) <= USER4)
 #define IS_DEFENDER_HUMAN(def_owner) ((def_owner) >= USER && (def_owner) <= USER4)
 #define HUMAN_NAME(owner) ((owner) == USER ? "Player 1" : (owner) == USER2 ? "Player 2" : (owner) == USER3 ? "Player 3" : (owner) == USER4 ? "Player 4" : "Unknown"))
-#define PLAYER_COLOR(owner) ((owner) == USER ? COLOR_RED : (owner) == USER2 ? COLOR_BLUE : (owner) == USER3 ? COLOR_YELLOW : (owner) == USER4 ? COLOR_MAGENTA : COLOR_WHITE)
+#define PLAYER_COLOR(owner) ((owner) == USER ? COLOR_RED : (owner) == USER2 ? COLOR_YELLOW : (owner) == USER3 ? COLOR_MAGENTA : (owner) == USER4 ? COLOR_GREEN : COLOR_WHITE)
 
 /* macro to step through adjacent cells */
 #define FOR_ADJ(loc, new_loc, i)                                               \

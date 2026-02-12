@@ -1144,14 +1144,13 @@ void move_army_to_city(piece_info_t *obj, loc_t city_loc) {
 
 	tt = find_nfull(TRANSPORT, city_loc);
 
-	if (tt != NULL) {
+	if (tt != NULL && tt->owner == CURRENT_PLAYER()) {
 		move_obj(obj, city_loc);
 	}
 
 	else {
 		fatal(obj, city_loc,
-		      "That's our city, sir!  Do you really want to attack the "
-		      "garrison? ",
+		      "That's our city, sir! Fixed attack protection.",
 		      "Your rebel army was liquidated.");
 	}
 }

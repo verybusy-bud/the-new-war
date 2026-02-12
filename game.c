@@ -330,7 +330,7 @@ bool select_cities(void) {
 
 	int user_cont;
 	int pair;
-	int i;
+		int i;
 
 	find_cont(); /* find and rank the continents */
 	if (ncont == 0) {
@@ -352,14 +352,36 @@ bool select_cities(void) {
 	int first_cont = pair_tab[pair].comp_cont; /* use as first player continent */
 	user_cont = pair_tab[pair].user_cont; /* use as second player continent */
 
+	/* Collect available continents for 4 players */
+	int available_conts[MAX_PLAYERS];
+	available_conts[0] = first_cont;
+	available_conts[1] = user_cont;
+	/* For more players, cycle through all ranked pairs */
+	for (i = 2; i < game.num_players && i < MAX_PLAYERS; i++) {
+		pair = (pair + 1) % (ncont * ncont / 2 + 1);
+		if (pair >= 0 && pair < ncont * ncont / 2 + 1) {
+			available_conts[i] = pair_tab[pair].user_cont;
+		} else {
+			available_conts[i] = user_cont;
+		}
+	}
+
 	/* Assign human players */
 	for (i = 0; i < game.num_players; i++) {
-		city_info_t *player_city;
+		city_info_t *player_city = NULL;
+		int found = 0;
+		int cont_idx = 0;
+		int attempts = 0;
 		
-		/* Alternate between continents for balance */
-		int use_cont = (i % 2 == 0) ? first_cont : user_cont;
-		
-		do {
+		/* Try to find a suitable city */
+		while (!found && attempts < 1000) {
+			int use_cont = available_conts[i];
+			
+			if (cont_tab[use_cont].ncity <= 0) {
+				attempts++;
+				continue;
+			}
+			
 			loc_t cityi = irand((long)cont_tab[use_cont].ncity);
 			player_city = cont_tab[use_cont].cityp[cityi];
 			
@@ -371,7 +393,7 @@ bool select_cities(void) {
 			int j;
 			for (j = 0; j < i; j++) {
 				if (assigned_city_locs[j] != -1) {
-					if (dist(player_city->loc, assigned_city_locs[j]) < 8) { /* minimum distance */
+					if (dist(player_city->loc, assigned_city_locs[j]) < 8) {
 						too_close = true;
 						break;
 					}
@@ -380,9 +402,53 @@ bool select_cities(void) {
 			
 			if (!already_taken && !too_close) {
 				assigned_city_locs[i] = player_city->loc;
+				found = 1;
 				break;
 			}
-		} while (1);
+			attempts++;
+		}
+		
+		if (!found) {
+			/* Try harder - search all continents */
+			for (cont_idx = 0; cont_idx < ncont && !found; cont_idx++) {
+				if (cont_tab[cont_idx].ncity <= 0) continue;
+				
+				loc_t cityi = irand((long)cont_tab[cont_idx].ncity);
+				player_city = cont_tab[cont_idx].cityp[cityi];
+				
+				int already_taken = (player_city->owner != UNOWNED);
+				int too_close = false;
+				int j;
+				for (j = 0; j < i; j++) {
+					if (assigned_city_locs[j] != -1) {
+						if (dist(player_city->loc, assigned_city_locs[j]) < 8) {
+							too_close = true;
+							break;
+						}
+					}
+				}
+				
+				if (!already_taken && !too_close) {
+					assigned_city_locs[i] = player_city->loc;
+					found = 1;
+					break;
+				}
+			}
+		}
+		
+		if (!found) {
+			/* Last resort - just pick any unowned city */
+			for (cont_idx = 0; cont_idx < ncont && !found; cont_idx++) {
+				for (loc_t cityi = 0; cityi < cont_tab[cont_idx].ncity && !found; cityi++) {
+					player_city = cont_tab[cont_idx].cityp[cityi];
+					if (player_city->owner == UNOWNED) {
+						assigned_city_locs[i] = player_city->loc;
+						found = 1;
+						break;
+					}
+				}
+			}
+		}
 
 		player_city->owner = USER + i; /* USER, USER2, USER3, USER4 */
 		player_city->work = 0;
@@ -934,41 +1000,41 @@ int restore_game(void) {
 	game.resigned = !!game.resigned;
 	game.debug = !!game.debug;
 	game.save_movie = !!game.save_movie;
-	
+
 	/* Load player information if supported by save format */
-		if (game.date > 0) { /* basic check if this is a new format save */
-			/* Try to read player info - if this fails, it might be an old save */
-			if (ftell(f) < 1000000) { /* rough check if we have more data */
-				R_RI32(game.num_players);
-				R_RI32(game.current_player);
-				for (i = 0; i < MAX_PLAYERS; i++) {
-					if (!xread(f, (char*)game.player[i].name, sizeof(game.player[i].name))) {
-						/* Old save format, set defaults */
-						game.num_players = 2; /* default 2 human players */
-						game.current_player = 0;
-						break;
-					}
-					R_RU8(game.player[i].is_human);
-					R_RU8(game.player[i].alive);
-					R_RI32(game.player[i].score);
+	if (game.date > 0) { /* basic check if this is a new format save */
+		/* Try to read player info - if this fails, it might be an old save */
+		if (ftell(f) < 1000000) { /* rough check if we have more data */
+			R_RI32(game.num_players);
+			R_RI32(game.current_player);
+			for (i = 0; i < MAX_PLAYERS; i++) {
+				if (!xread(f, (char*)game.player[i].name, sizeof(game.player[i].name))) {
+					/* Old save format, set defaults */
+					game.num_players = 2; /* default 2 human players */
+					game.current_player = 0;
+					break;
 				}
-			} else {
-				/* Old save format, set defaults */
-				game.num_players = 2; /* default 2 human players */
-				game.current_player = 0;
-				for (i = 0; i < MAX_PLAYERS; i++) {
-					if (i < game.num_players) {
-						sprintf(game.player[i].name, "Player %ld", (long)(i + 1));
-						game.player[i].is_human = 1;
-						game.player[i].alive = 1;
-						game.player[i].score = 0;
-					} else {
-						game.player[i].alive = 0;
-						game.player[i].score = 0;
-					}
+				R_RU8(game.player[i].is_human);
+				R_RU8(game.player[i].alive);
+				R_RI32(game.player[i].score);
+			}
+		} else {
+			/* Old save format, set defaults */
+			game.num_players = 2; /* default 2 human players */
+			game.current_player = 0;
+			for (i = 0; i < MAX_PLAYERS; i++) {
+				if (i < game.num_players) {
+					sprintf(game.player[i].name, "Player %ld", (long)(i + 1));
+					game.player[i].is_human = 1;
+					game.player[i].alive = 1;
+					game.player[i].score = 0;
+				} else {
+					game.player[i].alive = 0;
+					game.player[i].score = 0;
 				}
 			}
 		}
+	}
 
 	for (i = 0; i < MAP_SIZE; i++) {
 		R_RU8(game.real_map[i].contents);

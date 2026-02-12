@@ -30,7 +30,7 @@ static int save_cursor;       /* currently displayed cursor position */
 static bool change_ok = true; /* true if new sector may be displayed */
 
 static void show_loc(view_map_t vmap[], loc_t loc);
-static void disp_square(view_map_t *vp);
+static void disp_square(view_map_t *vp, loc_t loc);
 static void disp_city_prod(loc_t t);
 static bool on_screen(loc_t loc);
 
@@ -194,7 +194,7 @@ void show_loc(view_map_t vmap[], loc_t loc) {
 	if (game.showprod && vmap[loc].contents == 'O') {
 		disp_city_prod(loc);
 	} else {
-		disp_square(&vmap[loc]);
+		disp_square(&vmap[loc], loc);
 	}
 	save_cursor = loc; /* remember cursor location */
 	(void)move(r - ref_row + NUMTOPS, c - ref_col);
@@ -317,7 +317,7 @@ because the color doesn't convey any extra information, it just looks
 pretty.
 */
 
-static void disp_square(view_map_t *vp) {
+static void disp_square(view_map_t *vp, loc_t loc) {
 #ifdef A_COLOR
 	chtype attr;
 
@@ -338,7 +338,15 @@ static void disp_square(view_map_t *vp) {
 	case 's':
 	case 'z':
 	case 'X':
-		attr = COLOR_PAIR(COLOR_RED);
+		{
+			piece_info_t *obj = find_obj_at_loc(loc);
+			if (obj && obj->owner >= USER && obj->owner <= USER4 && obj->owner == CURRENT_PLAYER()) {
+				/* Show player colors for their pieces */
+				attr = COLOR_PAIR(PLAYER_COLOR(obj->owner));
+			} else {
+				attr = COLOR_PAIR(COLOR_RED);
+			}
+		}
 		break;
 	default:
 		attr = COLOR_PAIR(COLOR_WHITE);
@@ -395,7 +403,7 @@ void display_screen(view_map_t vmap[]) {
 			if (game.showprod && vmap[t].contents == 'O') {
 				disp_city_prod(t);
 			} else {
-				disp_square(&vmap[t]);
+				disp_square(&vmap[t], t);
 			}
 		}
 	}

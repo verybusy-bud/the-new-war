@@ -37,10 +37,7 @@ void empire(void) {
 	ttinit(); /* init tty */
 	rndini(); /* init random number generator */
 
-	clear_screen(); /* nothing on screen */
-	pos_str(7, 0, "EMPIRE, Version 5.00 site Amdahl 1-Apr-1988");
-	pos_str(8, 0, "Detailed directions are on the manual page\n");
-	(void)redisplay();
+
 
 	if (!restore_game()) /* try to restore previous game */ {
 		init_game(); /* otherwise init a new game */
@@ -121,7 +118,6 @@ void do_command(char orders) {
 	case 'A': /* turn on auto move mode */
 		game.automove = true;
 		error("Now in Auto-Mode for all players");
-		save_game();
 		break;
 
 	case 'C': /* show cities */
@@ -205,7 +201,7 @@ void do_command(char orders) {
 		if (game.resigned || game.debug)
 			replay_movie();
 		else
-			error("You cannot watch movie until computer resigns.");
+			error("You cannot watch movie until game is over.");
 		break;
 
 	case 'Z': /* print compressed map */
@@ -400,6 +396,55 @@ void c_movie(void) {
 		if (game.date == 125)
 			empend();
 #endif
+	}
+}
+
+/*
+ * Show title screen with player colors
+ */
+void show_title(void) {
+	kill_display();
+	
+	pos_str(7, 0, "EMPIRE, Version 5.00 site Amdahl 1-Apr-1988");
+	pos_str(8, 0, "Detailed directions are on the manual page\n");
+	pos_str(9, 0, "");
+	
+#ifdef A_COLOR
+	pos_str(10, 0, "Player 1: Red Armies");
+	pos_str(11, 0, "Player 2: Yellow Armies");
+	pos_str(12, 0, "Player 3: Purple Armies");
+	pos_str(13, 0, "Player 4: Green Armies");
+#endif
+	
+	pos_str(15, 0, "");
+	pos_str(16, 0, "Hotseat Multiplayer - %d Players", game.num_players);
+	pos_str(17, 0, "");
+	pos_str(18, 0, "Press any key to continue...");
+	redisplay();
+	get_chx(); /* wait for keypress */
+	
+	if (game.num_players > 1) {
+		/* Show player info for multiplayer */
+		pos_str(19, 0, "");
+		pos_str(20, 0, "Player Colors:");
+#ifdef A_COLOR
+		attron(COLOR_PAIR(COLOR_RED));
+		pos_str(21, 0, "P1: Red");
+		attroff(COLOR_PAIR(COLOR_RED));
+		attron(COLOR_PAIR(COLOR_YELLOW));
+		pos_str(21, 15, "P2: Yellow");
+		attroff(COLOR_PAIR(COLOR_YELLOW));
+		attron(COLOR_PAIR(COLOR_MAGENTA));
+		pos_str(22, 0, "P3: Purple");
+		attroff(COLOR_PAIR(COLOR_MAGENTA));
+		attron(COLOR_PAIR(COLOR_GREEN));
+		pos_str(22, 15, "P4: Green");
+		attroff(COLOR_PAIR(COLOR_GREEN));
+#endif
+		pos_str(23, 0, "");
+		pos_str(18, 0, "Press any key to continue...");
+		redisplay();
+		get_chx(); /* wait for keypress */
 	}
 }
 
