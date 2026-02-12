@@ -34,26 +34,27 @@ static void disp_square(view_map_t *vp, loc_t loc);
 static void disp_city_prod(loc_t t);
 static bool on_screen(loc_t loc);
 
-#ifdef A_COLOR
-void init_colors(void) {
-	start_color();
+static bool colors_enabled = false; /* runtime color support flag */
 
-	init_pair(COLOR_BLACK, COLOR_BLACK, COLOR_BLACK);
-	init_pair(COLOR_GREEN, COLOR_GREEN, COLOR_BLACK);
-	init_pair(COLOR_RED, COLOR_RED, COLOR_BLACK);
-	init_pair(COLOR_CYAN, COLOR_CYAN, COLOR_BLACK);
-	init_pair(COLOR_WHITE, COLOR_WHITE, COLOR_BLACK);
-	init_pair(COLOR_MAGENTA, COLOR_MAGENTA, COLOR_BLACK);
-	init_pair(COLOR_BLUE, COLOR_BLUE, COLOR_BLACK);
-	init_pair(COLOR_YELLOW, COLOR_YELLOW, COLOR_BLACK);
-	attron(A_BOLD); /* otherwise we get gray for white */
-	keypad(stdscr, TRUE);
+void init_colors(void) {
+	if (has_colors()) {
+		start_color();
+		colors_enabled = true;
+
+		init_pair(COLOR_BLACK, COLOR_BLACK, COLOR_BLACK);
+		init_pair(COLOR_GREEN, COLOR_GREEN, COLOR_BLACK);
+		init_pair(COLOR_RED, COLOR_RED, COLOR_BLACK);
+		init_pair(COLOR_CYAN, COLOR_CYAN, COLOR_BLACK);
+		init_pair(COLOR_WHITE, COLOR_WHITE, COLOR_BLACK);
+		init_pair(COLOR_MAGENTA, COLOR_MAGENTA, COLOR_BLACK);
+		init_pair(COLOR_BLUE, COLOR_BLUE, COLOR_BLACK);
+		init_pair(COLOR_YELLOW, COLOR_YELLOW, COLOR_BLACK);
+	}
 }
-#endif /* A_COLOR */
 
 /*
 Used for win announcements
- */
+*/
 void announce(char *msg) { (void)addstr(msg); }
 
 /*
@@ -318,48 +319,80 @@ pretty.
 */
 
 static void disp_square(view_map_t *vp, loc_t loc) {
-#ifdef A_COLOR
-	chtype attr;
+	chtype attr = 0;
+	char display_char = vp->contents;
 
-	switch (vp->contents) {
-	case MAP_LAND:
-		attr = COLOR_PAIR(COLOR_GREEN);
-		break;
-	case MAP_SEA:
-		attr = COLOR_PAIR(COLOR_CYAN);
-		break;
-	case 'a':
-	case 'f':
-	case 'p':
-	case 'd':
-	case 'b':
-	case 't':
-	case 'c':
-	case 's':
-	case 'z':
-	case 'X':
-		{
-			piece_info_t *obj = find_obj_at_loc(loc);
-			if (obj && obj->owner >= USER && obj->owner <= USER4 && obj->owner == CURRENT_PLAYER()) {
-				/* Show player colors for their pieces */
-				attr = COLOR_PAIR(PLAYER_COLOR(obj->owner));
-			} else {
-				attr = COLOR_PAIR(COLOR_RED);
+	if (colors_enabled) {
+		switch (vp->contents) {
+		case MAP_LAND:
+			attr = COLOR_PAIR(COLOR_GREEN) | A_REVERSE;
+			display_char = ' ';
+			break;
+		case MAP_SEA:
+			attr = COLOR_PAIR(COLOR_BLUE) | A_REVERSE;
+			display_char = ' ';
+			break;
+		case MAP_CITY:
+			attr = COLOR_PAIR(COLOR_BLACK) | A_REVERSE;
+			break;
+		case '1':
+			attr = COLOR_PAIR(COLOR_RED) | A_REVERSE;
+			break;
+		case '2':
+			attr = COLOR_PAIR(COLOR_YELLOW) | A_REVERSE;
+			break;
+		case '3':
+			attr = COLOR_PAIR(COLOR_MAGENTA) | A_REVERSE;
+			break;
+		case '4':
+			attr = COLOR_PAIR(COLOR_WHITE) | A_REVERSE;
+			break;
+		case 'a':
+		case 'A':
+		case 'f':
+		case 'F':
+		case 'p':
+		case 'P':
+		case 'd':
+		case 'D':
+		case 'b':
+		case 'B':
+		case 't':
+		case 'T':
+		case 'c':
+		case 'C':
+		case 's':
+		case 'S':
+		case 'z':
+		case 'Z':
+		case 'X':
+			{
+				piece_info_t *obj = find_obj_at_loc(loc);
+				if (obj && obj->owner >= USER && obj->owner <= USER4) {
+					switch(obj->owner) {
+						case USER: attr = COLOR_PAIR(COLOR_RED) | A_REVERSE; break;
+						case USER2: attr = COLOR_PAIR(COLOR_YELLOW) | A_REVERSE; break;
+						case USER3: attr = COLOR_PAIR(COLOR_MAGENTA) | A_REVERSE; break;
+						case USER4: attr = COLOR_PAIR(COLOR_WHITE) | A_REVERSE; break;
+						default: attr = COLOR_PAIR(COLOR_RED) | A_REVERSE; break;
+					}
+				} else {
+					attr = COLOR_PAIR(COLOR_RED) | A_REVERSE;
+				}
 			}
+			break;
+		default:
+			attr = COLOR_PAIR(COLOR_WHITE);
+			break;
 		}
-		break;
-	default:
-		attr = COLOR_PAIR(COLOR_WHITE);
-		break;
-	}
 
-	attron(attr);
-#endif /* A_COLOR */
-	(void)addch((chtype)vp->contents);
-#ifdef A_COLOR
-	attroff(attr);
-	attron(COLOR_PAIR(COLOR_WHITE));
-#endif /* A_COLOR */
+		attron(attr);
+	}
+	(void)addch((chtype)display_char);
+	if (colors_enabled) {
+		attroff(attr);
+		attron(COLOR_PAIR(COLOR_WHITE));
+	}
 }
 
 /*
@@ -373,14 +406,18 @@ static void disp_city_prod(loc_t t) {
 	cityp = find_city(t);
 	ASSERT(cityp != NULL);
 
-	attr = COLOR_PAIR(COLOR_CYAN);
-	attron(attr);
+	if (colors_enabled) {
+		attr = COLOR_PAIR(COLOR_CYAN);
+		attron(attr);
+	}
 
 	// cppcheck-suppress nullPointerRedundantCheck
 	(void)addch((chtype)piece_attr[(int)cityp->prod].sname);
 
-	attroff(attr);
-	attron(COLOR_PAIR(COLOR_WHITE));
+	if (colors_enabled) {
+		attroff(attr);
+		attron(COLOR_PAIR(COLOR_WHITE));
+	}
 }
 
 /*
@@ -632,9 +669,7 @@ void ttinit(void) {
 	(void)initscr();
 	(void)noecho();
 	(void)crmode();
-#ifdef A_COLOR
 	init_colors();
-#endif /* A_COLOR */
 	game.lines = LINES;
 	game.cols = COLS;
 	if (game.lines > MAP_HEIGHT + NUMTOPS + 1) {

@@ -1,6 +1,15 @@
-vms-empire
+# Build artifacts
 *.o
-empsave.dat
-empire.6
+tnw
+*.sav
+
+# Generated files
+*.6
 *.html
 MANIFEST
+
+# Old binary name
+vms-empire
+
+# Save files
+empsave.dat

@@ -129,9 +129,7 @@ void print_zoom(view_map_t *vmap);
 void print_pzoom(char *s, path_map_t *pmap, view_map_t *vmap);
 void print_xzoom(view_map_t *vmap);
 void display_score(void);
-#ifdef A_COLOR
 void init_colors(void);
-#endif /* A_COLOR */
 void redraw(void);
 void clear_screen(void);
 void complain(void);

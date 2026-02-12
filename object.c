@@ -551,7 +551,9 @@ contents starting with armies, then fighters, then boats, and the
 city type.
 */
 
-char city_char[] = {MAP_CITY, '1', '2', '3', '4', 'X'};
+/* City display characters indexed by owner value
+ * 0=UNOWNED, 1=USER(P1), 2=COMP, 3=USER2(P2), 4=USER3(P3), 5=USER4(P4) */
+char city_char[] = {'*', '1', 'C', '2', '3', '4'};
 
 void update(view_map_t vmap[], loc_t loc) {
 	vmap[loc].seen = game.date;

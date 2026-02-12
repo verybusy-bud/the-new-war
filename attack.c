@@ -107,6 +107,11 @@ void attack_obj(piece_info_t *att_obj, loc_t loc) {
 		return; /* can't attack a satellite */
 	}
 
+	/* Cannot attack your own units */
+	if (def_obj->owner == att_obj->owner) {
+		return; /* Can't attack your own unit */
+	}
+
 	while (att_obj->hits > 0 && def_obj->hits > 0) {
 		if (irand(2) == 0) /* defender hits? */ {
 			att_obj->hits -= piece_attr[def_obj->type].strength;
@@ -132,6 +137,11 @@ void attack_obj(piece_info_t *att_obj, loc_t loc) {
 
 void attack(piece_info_t *att_obj, loc_t loc) {
 	if (game.real_map[loc].contents == MAP_CITY) /* attacking a city? */ {
+		city_info_t *cityp = find_city(loc);
+		if (cityp && cityp->owner == att_obj->owner) {
+			/* Cannot attack your own city */
+			return;
+		}
 		attack_city(att_obj, loc);
 	} else {
 		attack_obj(att_obj, loc); /* attacking a piece */

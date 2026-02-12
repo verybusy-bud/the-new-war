@@ -1,25 +1,39 @@
-= README for vms-empire
+= README for tnw (The New War)
 
-VMS-Empire is a simulation of a full-scale war between two
-emperors, the computer and you.  Naturally, there is only
-room for one, so the object of the game is to destroy
-the other.  The computer plays by the same rules that you
-do.  This game is the ancestor of all the multiplayer 4X
-simulations out there, including Civilization and Master of Orion.
+tnw is a hotseat multiplayer version of vms-empire, a simulation of full-scale
+war between emperors. The object of the game is to conquer all enemies and
+become the sole ruler.
 
-This code originated under VMS but has been forward-ported to
-modern ANSI C.  It is known to run not only on Linux but
-also under Windows and Mac OS X; all you need is a local
-port of the curses library.
+This is a multiplayer 4X strategy game where each player takes turns controlling
+their forces on the same screen. Battle for territory, build armies and fleets,
+capture cities, and eliminate your opponents.
 
-git push
-The files HACKING and BUGS will be of interest if you intend
-to modify this code.
+== Multiplayer
 
-The ancestral code was by Chuck Simmons <chuck@amdahl.com>.  Since
-around 1990 it has been maintained by Eric S. Raymond <esr@thyrsus.com>
+Run with 2-4 players:
+    ./tnw -p 2    # 2 players
+    ./tnw -p 3    # 3 players
+    ./tnw -p 4    # 4 players
 
-This code is commonly packaged as "vms-empire".
+Player Colors:
+    Player 1: Red Armies
+    Player 2: Yellow Armies
+    Player 3: Purple Armies
+    Player 4: White Armies
 
-image:https://repology.org/badge/vertical-allrepos/vms-empire.svg[Repology
-package status]
+Controls are the same as classic empire - take turns entering commands.
+Press 'E' to end your turn and pass control to the next player.
+
+== Building
+
+    make clean && make
+
+Requires: ncurses
+
+== Original Empire
+
+This code originated under VMS by Chuck Simmons <chuck@amdahl.com>. Since
+around 1990 it was maintained by Eric S. Raymond <esr@thyrsus.com>.
+
+vms-empire is the ancestor of all multiplayer 4X simulations, including
+Civilization and Master of Orion.

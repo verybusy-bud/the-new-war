@@ -84,7 +84,7 @@ void init_game(void) {
 
 	make_map(); /* make land and water */
 
-	do {
+		do {
 		for (i = 0; i < MAP_SIZE; i++) { /* remove cities */
 			if (game.real_map[i].contents == MAP_CITY) {
 				game.real_map[i].contents = MAP_LAND; /* land */
@@ -92,6 +92,16 @@ void init_game(void) {
 		}
 		place_cities();     /* place cities on game.real_map */
 	} while (!select_cities()); /* choose a city for each player */
+
+	/* Remove fog of war - reveal entire map to all players */
+	for (i = 0; i < MAP_SIZE; i++) {
+		if (game.real_map[i].on_board) {
+			/* Scan for all human players */
+			scan(game.user_map, i);
+			/* Also scan for computer */
+			scan(game.comp_map, i);
+		}
+	}
 }
 
 /*
@@ -450,7 +460,14 @@ bool select_cities(void) {
 			}
 		}
 
-		player_city->owner = USER + i; /* USER, USER2, USER3, USER4 */
+		/* Assign proper owner value - USER, USER2, USER3, USER4 are not sequential */
+		switch (i) {
+			case 0: player_city->owner = USER; break;
+			case 1: player_city->owner = USER2; break;
+			case 2: player_city->owner = USER3; break;
+			case 3: player_city->owner = USER4; break;
+			default: player_city->owner = USER; break;
+		}
 		player_city->work = 0;
 		scan(game.user_map, player_city->loc);
 		

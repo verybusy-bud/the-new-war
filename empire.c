@@ -57,7 +57,12 @@ void empire(void) {
 				int player_idx = (start_player + i) % game.num_players;
 				if (game.player[player_idx].alive) {
 					game.current_player = player_idx;
-					user_move();
+					/* Check if this player is AI-controlled */
+					if (game.ai_mask & (1 << player_idx)) {
+						comp_move(1); /* AI player uses computer logic */
+					} else {
+						user_move();
+					}
 					players_processed++;
 				}
 			}
@@ -84,9 +89,23 @@ void empire(void) {
 			
 			/* Display whose turn it is */
 			if (game.player[game.current_player].alive) {
-				prompt("%s's orders? ", game.player[game.current_player].name);
-				order = get_chx(); /* get a command */
-				do_command(order);
+				/* Check if current player is AI-controlled */
+				if (game.ai_mask & (1 << game.current_player)) {
+					comp_move(1); /* AI player uses computer logic */
+					/* Move to next player after AI turn */
+					game.current_player++;
+					if (game.current_player >= game.num_players) {
+						game.current_player = 0;
+						turn++;
+						if (turn % game.save_interval == 0) {
+							save_game();
+						}
+					}
+				} else {
+					prompt("%s's orders? ", game.player[game.current_player].name);
+					order = get_chx(); /* get a command */
+					do_command(order);
+				}
 			}
 			
 			/* Check if game is over after each turn */
@@ -406,16 +425,14 @@ void c_movie(void) {
 void show_title(void) {
 	kill_display();
 	
-	pos_str(7, 0, "EMPIRE, Version 5.00 site Amdahl 1-Apr-1988");
-	pos_str(8, 0, "Detailed directions are on the manual page\n");
+	pos_str(7, 0, "THE_NEW_WAR, Version 1.0 site Benjamin Klosterman 12-Feb-2026");
+	pos_str(8, 0, "Detailed directions are on the empire manual page\n");
 	pos_str(9, 0, "");
 	
-#ifdef A_COLOR
 	pos_str(10, 0, "Player 1: Red Armies");
 	pos_str(11, 0, "Player 2: Yellow Armies");
 	pos_str(12, 0, "Player 3: Purple Armies");
-	pos_str(13, 0, "Player 4: Green Armies");
-#endif
+	pos_str(13, 0, "Player 4: White Armies");
 	
 	pos_str(15, 0, "");
 	pos_str(16, 0, "Hotseat Multiplayer - %d Players", game.num_players);
@@ -423,30 +440,6 @@ void show_title(void) {
 	pos_str(18, 0, "Press any key to continue...");
 	redisplay();
 	get_chx(); /* wait for keypress */
-	
-	if (game.num_players > 1) {
-		/* Show player info for multiplayer */
-		pos_str(19, 0, "");
-		pos_str(20, 0, "Player Colors:");
-#ifdef A_COLOR
-		attron(COLOR_PAIR(COLOR_RED));
-		pos_str(21, 0, "P1: Red");
-		attroff(COLOR_PAIR(COLOR_RED));
-		attron(COLOR_PAIR(COLOR_YELLOW));
-		pos_str(21, 15, "P2: Yellow");
-		attroff(COLOR_PAIR(COLOR_YELLOW));
-		attron(COLOR_PAIR(COLOR_MAGENTA));
-		pos_str(22, 0, "P3: Purple");
-		attroff(COLOR_PAIR(COLOR_MAGENTA));
-		attron(COLOR_PAIR(COLOR_GREEN));
-		pos_str(22, 15, "P4: Green");
-		attroff(COLOR_PAIR(COLOR_GREEN));
-#endif
-		pos_str(23, 0, "");
-		pos_str(18, 0, "Press any key to continue...");
-		redisplay();
-		get_chx(); /* wait for keypress */
-	}
 }
 
 /* end */

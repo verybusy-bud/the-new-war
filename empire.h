@@ -171,11 +171,11 @@ Macros to link and unlink an object from a doubly linked list.
 #define MAP(owner) (((owner) == USER || (owner) == USER2 || (owner) == USER3 || (owner) == USER4) ? game.user_map : game.comp_map)
 #define LIST(owner) (((owner) == USER || (owner) == USER2 || (owner) == USER3 || (owner) == USER4) ? game.user_obj : game.comp_obj)
 #define IS_HUMAN(owner) ((owner) >= USER && (owner) <= USER4)
-#define CURRENT_PLAYER() (USER + game.current_player)
+#define CURRENT_PLAYER() (game.current_player == 0 ? USER : game.current_player == 1 ? USER2 : game.current_player == 2 ? USER3 : game.current_player == 3 ? USER4 : USER)
 #define IS_ATTACKER_HUMAN(att_owner) ((att_owner) >= USER && (att_owner) <= USER4)
 #define IS_DEFENDER_HUMAN(def_owner) ((def_owner) >= USER && (def_owner) <= USER4)
 #define HUMAN_NAME(owner) ((owner) == USER ? "Player 1" : (owner) == USER2 ? "Player 2" : (owner) == USER3 ? "Player 3" : (owner) == USER4 ? "Player 4" : "Unknown"))
-#define PLAYER_COLOR(owner) ((owner) == USER ? COLOR_RED : (owner) == USER2 ? COLOR_YELLOW : (owner) == USER3 ? COLOR_MAGENTA : (owner) == USER4 ? COLOR_GREEN : COLOR_WHITE)
+#define PLAYER_COLOR(owner) ((owner) == USER ? COLOR_RED : (owner) == USER2 ? COLOR_YELLOW : (owner) == USER3 ? COLOR_MAGENTA : (owner) == USER4 ? COLOR_WHITE : COLOR_WHITE)
 
 /* macro to step through adjacent cells */
 #define FOR_ADJ(loc, new_loc, i)                                               \
@@ -314,6 +314,7 @@ typedef struct {
 	/* game state */
 	int num_players;           /* number of players in game */
 	int current_player;         /* current player index (0-based) */
+	int ai_mask;               /* bitmask for AI players (bit 0=P1, bit 1=P2, etc.) */
 	player_info_t player[MAX_PLAYERS]; /* player information */
 
 	/* the world */
