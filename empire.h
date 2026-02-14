@@ -53,10 +53,10 @@ typedef long count_t; /* for iterating over or counting board locations */
 
 #define UNOWNED 0
 #define USER 1
-#define COMP 2
-#define USER2 3
-#define USER3 4
-#define USER4 5
+#define USER2 2
+#define USER3 3
+#define USER4 4
+#define COMP 5
 #define MAX_PLAYERS 6
 
 /* Piece types. */
@@ -175,7 +175,7 @@ Macros to link and unlink an object from a doubly linked list.
 #define IS_ATTACKER_HUMAN(att_owner) ((att_owner) >= USER && (att_owner) <= USER4)
 #define IS_DEFENDER_HUMAN(def_owner) ((def_owner) >= USER && (def_owner) <= USER4)
 #define HUMAN_NAME(owner) ((owner) == USER ? "Player 1" : (owner) == USER2 ? "Player 2" : (owner) == USER3 ? "Player 3" : (owner) == USER4 ? "Player 4" : "Unknown"))
-#define PLAYER_COLOR(owner) ((owner) == USER ? COLOR_RED : (owner) == USER2 ? COLOR_YELLOW : (owner) == USER3 ? COLOR_MAGENTA : (owner) == USER4 ? COLOR_WHITE : COLOR_WHITE)
+#define PLAYER_COLOR(owner) ((owner) == USER ? 8 : (owner) == USER2 ? COLOR_YELLOW : (owner) == USER3 ? COLOR_RED : (owner) == USER4 ? COLOR_WHITE : COLOR_WHITE)
 
 /* macro to step through adjacent cells */
 #define FOR_ADJ(loc, new_loc, i)                                               \

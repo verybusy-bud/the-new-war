@@ -117,6 +117,7 @@ clean:
 	rm -f *.o TAGS tnw
 	rm -f *.6 *.html
 	rm -f *.sav
+	make
 
 reflow:
 	@clang-format --style="{IndentWidth: 8, UseTab: ForIndentation}" -i $$(find . -name "*.[ch]")

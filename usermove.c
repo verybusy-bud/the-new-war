@@ -55,9 +55,13 @@ void user_move(void) {
 			scan(game.user_map, game.city[i].loc);
 			prod = game.city[i].prod;
 
-			if (prod == NOPIECE) { /* need production? */
-				set_prod(&(game.city[i])); /* ask user what to
-				                              produce */
+			if (prod == NOPIECE) {
+				if (game.automove) {
+					game.city[i].prod = ARMY;
+					game.city[i].work = 0;
+				} else {
+					set_prod(&(game.city[i]));
+				}
 			} else if (game.city[i].work++ >=
 			           (long)piece_attr[prod].build_time) {
 				/* kermyt begin */
@@ -292,11 +296,24 @@ void move_explore(piece_info_t *obj) {
 	path_map_t path_map[MAP_SIZE];
 	loc_t loc;
 	char *terrain;
+	move_info_t *army_info;
+
+	/* Select the correct move_info based on current player */
+	int owner = CURRENT_PLAYER();
+	if (owner == USER2) {
+		army_info = &user2_army;
+	} else if (owner == USER3) {
+		army_info = &user3_army;
+	} else if (owner == USER4) {
+		army_info = &user4_army;
+	} else {
+		army_info = &user_army;
+	}
 
 	switch (obj->type) {
 	case ARMY:
 		loc = vmap_find_lobj(path_map, game.user_map, obj->loc,
-		                     &user_army);
+		                     army_info);
 		terrain = "+";
 		break;
 	case FIGHTER:
@@ -394,11 +411,24 @@ Move an army toward an attackable city or enemy army.
 void move_armyattack(piece_info_t *obj) {
 	path_map_t path_map[MAP_SIZE];
 	loc_t loc;
+	move_info_t *attack_info;
 
 	ASSERT(obj->type == ARMY);
 
+	/* Select the correct move_info based on current player */
+	int owner = CURRENT_PLAYER();
+	if (owner == USER2) {
+		attack_info = &user2_army_attack;
+	} else if (owner == USER3) {
+		attack_info = &user3_army_attack;
+	} else if (owner == USER4) {
+		attack_info = &user4_army_attack;
+	} else {
+		attack_info = &user_army_attack;
+	}
+
 	loc = vmap_find_lobj(path_map, game.user_map, obj->loc,
-	                     &user_army_attack);
+	                     attack_info);
 
 	if (loc == obj->loc) {
 		return; /* nothing to attack */
@@ -658,6 +688,7 @@ void ask_user(piece_info_t *obj) {
 			user_repair(obj);
 			return;
 		case 'Y':
+		case 'y':
 			user_armyattack(obj);
 			return;
 

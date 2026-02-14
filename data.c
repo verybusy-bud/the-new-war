@@ -172,7 +172,25 @@ move_info_t user_army        = {
 	USER, " ",   {1}
 };
 move_info_t user_army_attack = {
-	USER, "*Xa ", {1, 1, 1, 12}
+	USER, "*Xa1234 ", {1, 1, 1, 12, 12, 12, 12}
+};
+move_info_t user2_army        = {
+	USER2, " ",   {1}
+};
+move_info_t user2_army_attack = {
+	USER2, "*Xa1234 ", {1, 1, 1, 12, 12, 12, 12}
+};
+move_info_t user3_army        = {
+	USER3, " ",   {1}
+};
+move_info_t user3_army_attack = {
+	USER3, "*Xa1234 ", {1, 1, 1, 12, 12, 12, 12}
+};
+move_info_t user4_army        = {
+	USER4, " ",   {1}
+};
+move_info_t user4_army_attack = {
+	USER4, "*Xa1234 ", {1, 1, 1, 12, 12, 12, 12}
 };
 move_info_t user_fighter     = {
 	USER, " ",   {1}

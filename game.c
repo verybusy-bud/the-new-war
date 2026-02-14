@@ -36,7 +36,7 @@ void init_game(void) {
 	void make_map(void), place_cities(void);
 
 	count_t i;
-
+	
 	kill_display(); /* nothing on screen */
 	game.automove = false;
 	game.resigned = false;
@@ -93,6 +93,9 @@ void init_game(void) {
 		place_cities();     /* place cities on game.real_map */
 	} while (!select_cities()); /* choose a city for each player */
 
+	/* Reset to first player after city selection */
+	game.current_player = 0;
+	
 	/* Remove fog of war - reveal entire map to all players */
 	for (i = 0; i < MAP_SIZE; i++) {
 		if (game.real_map[i].on_board) {
@@ -361,7 +364,7 @@ bool select_cities(void) {
 	pair = ncont * ncont / 2; /* pick middle difficulty for balanced gameplay */
 	int first_cont = pair_tab[pair].comp_cont; /* use as first player continent */
 	user_cont = pair_tab[pair].user_cont; /* use as second player continent */
-
+	
 	/* Collect available continents for 4 players */
 	int available_conts[MAX_PLAYERS];
 	available_conts[0] = first_cont;
@@ -375,7 +378,9 @@ bool select_cities(void) {
 			available_conts[i] = user_cont;
 		}
 	}
-
+	
+	error("DEBUG: available_conts: %d %d %d %d", available_conts[0], available_conts[1], available_conts[2], available_conts[3]);
+	
 	/* Assign human players */
 	for (i = 0; i < game.num_players; i++) {
 		city_info_t *player_city = NULL;
@@ -479,7 +484,7 @@ bool select_cities(void) {
 		
 		players_assigned++;
 	}
-
+	
 	return (true);
 }
 

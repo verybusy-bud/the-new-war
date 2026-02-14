@@ -50,7 +50,8 @@ void empire(void) {
 			/* Process all player turns in automove mode */
 			int players_processed = 0;
 			
-			/* Start from current player, not from beginning */
+			/* Always start from player 1 in automove */
+			game.current_player = 0;
 			int start_player = game.current_player;
 			
 			for (int i = 0; i < game.num_players; i++) {
@@ -111,13 +112,15 @@ void empire(void) {
 			/* Check if game is over after each turn */
 			check_endgame();
 			
-			/* Move to next player */
-			game.current_player++;
-			if (game.current_player >= game.num_players) {
-				game.current_player = 0; /* back to first player */
-				turn++;
-				if (turn % game.save_interval == 0) {
-					save_game();
+			/* Move to next player (skip if automove was just activated) */
+			if (!game.automove) {
+				game.current_player++;
+				if (game.current_player >= game.num_players) {
+					game.current_player = 0; /* back to first player */
+					turn++;
+					if (turn % game.save_interval == 0) {
+						save_game();
+					}
 				}
 			}
 		}
@@ -137,6 +140,7 @@ void do_command(char orders) {
 	switch (orders) {
 	case 'A': /* turn on auto move mode */
 		game.automove = true;
+		game.current_player = 0; /* reset to first player */
 		error("Now in Auto-Mode for all players");
 		break;
 
@@ -150,8 +154,7 @@ void do_command(char orders) {
 
 	case 'E': /* end turn - force immediate advancement */
 		error("Ending %s's turn", game.player[game.current_player].name);
-		/* Increment now to avoid double increment in main loop */
-		game.current_player++; 
+		/* Don't increment here - main loop will do it */
 		break;
 
 	case 'F': /* print map to file */
@@ -425,17 +428,17 @@ void c_movie(void) {
 void show_title(void) {
 	kill_display();
 	
-	pos_str(7, 0, "THE_NEW_WAR, Version 1.0 site Benjamin Klosterman 12-Feb-2026");
+	pos_str(7, 0, "THE NEW WAR, Version 1.1 site Benjamin Klosterman 14-Feb-2026");
 	pos_str(8, 0, "Detailed directions are on the empire manual page\n");
 	pos_str(9, 0, "");
 	
-	pos_str(10, 0, "Player 1: Red Armies");
-	pos_str(11, 0, "Player 2: Yellow Armies");
-	pos_str(12, 0, "Player 3: Purple Armies");
-	pos_str(13, 0, "Player 4: White Armies");
+	pos_str(10, 0, "General 1: Red Forces");
+	pos_str(11, 0, "General 2: Yellow Forces");
+	pos_str(12, 0, "General 3: Purple Forces");
+	pos_str(13, 0, "General 4: White Forces");
 	
 	pos_str(15, 0, "");
-	pos_str(16, 0, "Hotseat Multiplayer - %d Players", game.num_players);
+	pos_str(16, 0, "There are %d Generals joining us today", game.num_players);
 	pos_str(17, 0, "");
 	pos_str(18, 0, "Press any key to continue...");
 	redisplay();

@@ -552,8 +552,8 @@ city type.
 */
 
 /* City display characters indexed by owner value
- * 0=UNOWNED, 1=USER(P1), 2=COMP, 3=USER2(P2), 4=USER3(P3), 5=USER4(P4) */
-char city_char[] = {'*', '1', 'C', '2', '3', '4'};
+ * 0=UNOWNED, 1=USER(P1), 2=USER2(P2), 3=USER3(P3), 4=USER4(P4), 5=COMP */
+char city_char[] = {'*', '1', '2', '3', '4', 'C'};
 
 void update(view_map_t vmap[], loc_t loc) {
 	vmap[loc].seen = game.date;
@@ -617,10 +617,10 @@ int get_piece_name(void) {
 	char c;
 	int i;
 
-	c = get_chx(); /* get the answer */
+	c = get_chx();
 
 	for (i = 0; i < NUM_OBJECTS; i++)
-		if (piece_attr[i].sname == c) {
+		if (piece_attr[i].sname == c || piece_attr[i].sname == (char)tolower((unsigned char)c)) {
 			return i;
 		}
 	return NOPIECE;
