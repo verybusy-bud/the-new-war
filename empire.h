@@ -61,15 +61,16 @@ typedef long count_t; /* for iterating over or counting board locations */
 
 /* Piece types. */
 #define ARMY 0
-#define FIGHTER 1
-#define PATROL 2
-#define DESTROYER 3
-#define SUBMARINE 4
-#define TRANSPORT 5
-#define CARRIER 6
-#define BATTLESHIP 7
-#define SATELLITE 8
-#define NUM_OBJECTS 9       /* number of defined objects */
+#define MARINE 1
+#define FIGHTER 2
+#define PATROL 3
+#define DESTROYER 4
+#define SUBMARINE 5
+#define TRANSPORT 6
+#define CARRIER 7
+#define BATTLESHIP 8
+#define SATELLITE 9
+#define NUM_OBJECTS 10       /* number of defined objects */
 #define NOPIECE ((char)255) /* a 'null' piece */
 
 #define LIST_SIZE 5000 /* max number of pieces on board */
@@ -175,7 +176,7 @@ Macros to link and unlink an object from a doubly linked list.
 #define IS_ATTACKER_HUMAN(att_owner) ((att_owner) >= USER && (att_owner) <= USER4)
 #define IS_DEFENDER_HUMAN(def_owner) ((def_owner) >= USER && (def_owner) <= USER4)
 #define HUMAN_NAME(owner) ((owner) == USER ? "Player 1" : (owner) == USER2 ? "Player 2" : (owner) == USER3 ? "Player 3" : (owner) == USER4 ? "Player 4" : "Unknown"))
-#define PLAYER_COLOR(owner) ((owner) == USER ? 8 : (owner) == USER2 ? COLOR_YELLOW : (owner) == USER3 ? COLOR_RED : (owner) == USER4 ? COLOR_WHITE : COLOR_WHITE)
+#define PLAYER_COLOR(owner) ((owner) == USER ? COLOR_RED : (owner) == USER2 ? COLOR_YELLOW : (owner) == USER3 ? 9 : (owner) == USER4 ? COLOR_WHITE : COLOR_WHITE)
 
 /* macro to step through adjacent cells */
 #define FOR_ADJ(loc, new_loc, i)                                               \

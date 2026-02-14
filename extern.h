@@ -49,6 +49,7 @@ extern move_info_t user4_army_attack;
 extern move_info_t user_fighter;
 extern move_info_t user_ship;
 extern move_info_t user_ship_repair;
+extern loc_t find_attack(loc_t, char *, char *);
 
 extern char *help_cmd[];
 extern char *help_edit[];

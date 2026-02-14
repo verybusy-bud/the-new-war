@@ -331,6 +331,7 @@ void move_obj(piece_info_t *obj, loc_t new_loc) {
 		break;
 
 	case ARMY:
+	case MARINE:
 		p = find_nfull(TRANSPORT, obj->loc);
 		if (p != NULL)
 			embark(p, obj);

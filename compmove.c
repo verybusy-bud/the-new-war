@@ -456,6 +456,7 @@ void move1(piece_info_t *obj) {
 
 	switch (obj->type) {
 	case ARMY:
+	case MARINE:
 		army_move(obj);
 		break;
 	case TRANSPORT:
@@ -1013,6 +1014,7 @@ void move_objective(piece_info_t *obj, path_map_t pathmap[], loc_t new_loc,
 	/* path terrain and move terrain may differ */
 	switch (obj->type) {
 	case ARMY:
+	case MARINE:
 		terrain = "+";
 		break;
 	case FIGHTER:
@@ -1067,6 +1069,7 @@ void move_objective(piece_info_t *obj, path_map_t pathmap[], loc_t new_loc,
 			terrain = "+.";
 			break;
 		case ARMY:
+		case MARINE:
 			attack_list = army_attack;
 			if (obj->ship)
 				terrain = "+*";

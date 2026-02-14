@@ -53,6 +53,10 @@ void init_colors(void) {
 		/* Custom brown color (index 8) */
 		init_color(8, 400, 200, 0);  /* brown: R=400,G=200,B=0 (0-1000 scale) */
 		init_pair(8, 8, COLOR_BLACK);
+		
+		/* Custom navy blue color (index 9) */
+		init_color(9, 0, 0, 500);  /* navy blue: R=0,G=0,B=500 */
+		init_pair(9, 9, COLOR_BLACK);
 	}
 }
 
@@ -340,19 +344,21 @@ static void disp_square(view_map_t *vp, loc_t loc) {
 			attr = COLOR_PAIR(COLOR_BLACK) | A_REVERSE;
 			break;
 		case '1':
-			attr = COLOR_PAIR(8) | A_REVERSE;
+			attr = COLOR_PAIR(COLOR_RED) | A_REVERSE;
 			break;
 		case '2':
 			attr = COLOR_PAIR(COLOR_YELLOW) | A_REVERSE;
 			break;
 		case '3':
-			attr = COLOR_PAIR(COLOR_RED) | A_REVERSE;
+			attr = COLOR_PAIR(9) | A_REVERSE;  /* navy blue */
 			break;
 		case '4':
 			attr = COLOR_PAIR(COLOR_WHITE) | A_REVERSE;
 			break;
 		case 'a':
 		case 'A':
+		case 'm':
+		case 'M':
 		case 'f':
 		case 'F':
 		case 'p':
@@ -375,9 +381,9 @@ static void disp_square(view_map_t *vp, loc_t loc) {
 				piece_info_t *obj = find_obj_at_loc(loc);
 				if (obj && obj->owner >= USER && obj->owner <= USER4) {
 					switch(obj->owner) {
-						case USER: attr = COLOR_PAIR(8); break;  /* brown */
+						case USER: attr = COLOR_PAIR(COLOR_RED); break;
 						case USER2: attr = COLOR_PAIR(COLOR_YELLOW); break;
-						case USER3: attr = COLOR_PAIR(COLOR_RED); break;
+						case USER3: attr = COLOR_PAIR(9); break;  /* navy blue */
 						case USER4: attr = COLOR_PAIR(COLOR_WHITE); break;
 						default: attr = COLOR_PAIR(COLOR_RED); break;
 					}

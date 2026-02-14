@@ -190,6 +190,7 @@ void describe(piece_info_t *win_obj, piece_info_t *lose_obj, loc_t loc) {
 			if (diff > 0) {
 				switch (win_obj->cargo->type) {
 				case ARMY:
+				case MARINE:
 					ksend("%d armies fell overboard and "
 					      "drowned in the assault.\n",
 					      diff); // kermyt

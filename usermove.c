@@ -13,6 +13,7 @@ usermove.c -- Let the user move her troops.
 #include "empire.h"
 #include "extern.h"
 #include <ctype.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -312,6 +313,7 @@ void move_explore(piece_info_t *obj) {
 
 	switch (obj->type) {
 	case ARMY:
+	case MARINE:
 		loc = vmap_find_lobj(path_map, game.user_map, obj->loc,
 		                     army_info);
 		terrain = "+";
@@ -412,11 +414,12 @@ void move_armyattack(piece_info_t *obj) {
 	path_map_t path_map[MAP_SIZE];
 	loc_t loc;
 	move_info_t *attack_info;
+	view_map_t *player_map;
+	int owner = CURRENT_PLAYER();
 
-	ASSERT(obj->type == ARMY);
+ASSERT(obj->type == ARMY || obj->type == MARINE);
 
 	/* Select the correct move_info based on current player */
-	int owner = CURRENT_PLAYER();
 	if (owner == USER2) {
 		attack_info = &user2_army_attack;
 	} else if (owner == USER3) {
@@ -426,16 +429,18 @@ void move_armyattack(piece_info_t *obj) {
 	} else {
 		attack_info = &user_army_attack;
 	}
+	
+	player_map = MAP(owner);
 
-	loc = vmap_find_lobj(path_map, game.user_map, obj->loc,
-	                     attack_info);
+	/* Find target on continent using pathfinding */
+	loc = vmap_find_lobj(path_map, player_map, obj->loc, attack_info);
 
 	if (loc == obj->loc) {
 		return; /* nothing to attack */
 	}
-	vmap_mark_path(path_map, game.user_map, loc);
+	vmap_mark_path(path_map, player_map, loc);
 
-	loc = vmap_find_dir(path_map, game.user_map, obj->loc, "+", "X*a");
+	loc = vmap_find_dir(path_map, player_map, obj->loc, "+", "X*a");
 	if (loc != obj->loc) {
 		move_obj(obj, loc);
 	}
@@ -573,6 +578,7 @@ void move_to_dest(piece_info_t *obj, loc_t dest) {
 
 	switch (obj->type) {
 	case ARMY:
+	case MARINE:
 		fterrain = T_LAND;
 		mterrain = "+";
 		break;
@@ -855,7 +861,7 @@ Set an army's function to WFTRANSPORT.
 */
 
 void user_transport(piece_info_t *obj) {
-	if (obj->type != ARMY) {
+	if (obj->type != ARMY && obj->type != MARINE) {
 		complain();
 	} else {
 		obj->func = WFTRANSPORT;
@@ -867,7 +873,7 @@ Set an army's function to ARMYATTACK.
 */
 
 void user_armyattack(piece_info_t *obj) {
-	if (obj->type != ARMY) {
+	if (obj->type != ARMY && obj->type != MARINE) {
 		complain();
 	} else {
 		obj->func = ARMYATTACK;
@@ -986,6 +992,7 @@ void user_dir(piece_info_t *obj, int dir) {
 	}
 	switch (obj->type) {
 	case ARMY:
+	case MARINE:
 		user_dir_army(obj, loc);
 		break;
 	case FIGHTER:

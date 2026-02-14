@@ -40,6 +40,10 @@ piece_attr_t piece_attr[] = {
 	 0, /* capacity */
 	 INFINITY}, /* range */
 
+	{'M', /* marine - slightly stronger than army */
+	 "marine", "marine", "a marine", "marines",
+	 "+", 6, 2, 2, 1, 0, INFINITY},
+
 	/*
 	 For fighters, the range is set to an even multiple of the speed.
 	 This allows user to move fighter, say, two turns out and two
@@ -91,10 +95,10 @@ char *func_name[] = {"none", "random", "sentry", "fill", "land",
 
 /* The order in which pieces should be moved. */
 int move_order[] = {SATELLITE, TRANSPORT, CARRIER, BATTLESHIP, 
-		    PATROL, SUBMARINE, DESTROYER, ARMY, FIGHTER};
+		    PATROL, SUBMARINE, DESTROYER, ARMY, MARINE, FIGHTER};
 
 /* types of pieces, in declared order */
-char type_chars[] = "AFPDSTCBZ";
+char type_chars[] = "AMFPDSTCBZ";
 
 /* Lists of attackable objects if object is adjacent to moving piece. */
 
