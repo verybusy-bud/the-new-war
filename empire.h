@@ -70,7 +70,8 @@ typedef long count_t; /* for iterating over or counting board locations */
 #define CARRIER 7
 #define BATTLESHIP 8
 #define SATELLITE 9
-#define NUM_OBJECTS 10       /* number of defined objects */
+#define BOMBER 10
+#define NUM_OBJECTS 11       /* number of defined objects */
 #define NOPIECE ((char)255) /* a 'null' piece */
 
 #define LIST_SIZE 5000 /* max number of pieces on board */
@@ -140,6 +141,7 @@ typedef struct piece_info {
 	struct piece_info *cargo; /* pointer to cargo list */
 	short count;              /* count of items on board */
 	short range;              /* current range (if applicable) */
+	bool entrenched;          /* true if army/marine is entrenched on sentry */
 } piece_info_t;
 
 /*
@@ -226,6 +228,7 @@ You can change them and the code will adjust properly.
 /* #define NUM_CITY 70 */
 /* #define NUM_CITY (MAP_SIZE / 85) */
 #define NUM_CITY ((100 * (MAP_WIDTH + MAP_HEIGHT)) / 228)
+#define NUM_CITY_BOX 20 /* Fewer cities for box map mode */
 
 typedef struct real_map {   /* a cell of the actual map */
 	char contents;      /* MAP_LAND, MAP_SEA, or MAP_CITY */
@@ -327,6 +330,9 @@ typedef struct {
 	/* miscellaneous */
 	long date;            /* number of game turns played */
 	bool automove;        /* true iff user is in automove mode */
+	bool sim_mode;        /* true iff simulation mode - AI controls all units */
+	bool box_map;        /* true iff box map mode - simple rectangular land */
+	bool text_mode;      /* true iff text mode - print map and exit */
 	bool resigned;        /* true iff computer resigned */
 	bool debug;           /* true iff in debugging mode */
 	bool print_debug;     /* true iff we print debugging stuff */

@@ -44,6 +44,11 @@ void empire(void) {
 		init_game(); /* otherwise init a new game */
 	}
 
+	/* Restore automove state after init_game may have reset it */
+	if (game.sim_mode) {
+		game.automove = true;
+	}
+
 	/* Command loop starts here. */
 	for (;;) {                   /* until user quits */
 		if (game.automove) { /* don't ask for cmd in auto mode */
@@ -60,7 +65,10 @@ void empire(void) {
 					game.current_player = player_idx;
 					/* Check if this player is AI-controlled */
 					if (game.ai_mask & (1 << player_idx)) {
-						comp_move(1); /* AI player uses computer logic */
+						/* AI-controlled player - handle production and movement */
+						int owner = USER + player_idx;
+						ai_city_production(owner);
+						ai_player_move(owner);
 					} else {
 						user_move();
 					}
@@ -428,7 +436,7 @@ void c_movie(void) {
 void show_title(void) {
 	kill_display();
 	
-	pos_str(7, 0, "THE NEW WAR, Version 1.1 site Benjamin Klosterman 14-Feb-2026");
+	pos_str(7, 0, "THE NEW WAR, Version 1.3 site Benjamin Klosterman 15-Feb-2026");
 	pos_str(8, 0, "Detailed directions are on the empire manual page\n");
 	pos_str(9, 0, "");
 	
@@ -440,9 +448,14 @@ void show_title(void) {
 	pos_str(15, 0, "");
 	pos_str(16, 0, "There are %d Generals joining us today", game.num_players);
 	pos_str(17, 0, "");
-	pos_str(18, 0, "Press any key to continue...");
-	redisplay();
-	get_chx(); /* wait for keypress */
+	
+	if (!game.automove) {
+		pos_str(18, 0, "Press any key to continue...");
+		redisplay();
+		get_chx(); /* wait for keypress */
+	} else {
+		redisplay();
+	}
 }
 
 /* end */

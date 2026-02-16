@@ -246,15 +246,15 @@ column.</para>
         <entry align='right' colsep='1'>2</entry>
         <entry align='center'>40(48)</entry>
       </row>
-      <row>
-        <entry align='left' colsep='1'>Satellite</entry>
-        <entry align='center' colsep='1'>Z</entry>
-        <entry align='center' colsep='1'>z</entry>
-        <entry align='right' colsep='1'>10</entry>
-        <entry align='right' colsep='1'>--</entry>
-        <entry align='right' colsep='1'>--</entry>
-        <entry align='center'>50(60)</entry>
-      </row>
+<row>
+<entry align='left' colsep='1'>Satellite</entry>
+<entry align='center' colsep='1'>Z</entry>
+<entry align='center' colsep='1'>z</entry>
+<entry align='right' colsep='1'>10</entry>
+<entry align='right' colsep='1'>1</entry>
+<entry align='right' colsep='1'>AOE</entry>
+<entry align='center'>50(60)</entry>
+</row>
     </tbody>
   </tgroup>
 </informaltable>
@@ -342,10 +342,11 @@ carrier.</para>
 
 <para><emphasis remap='B'>Battleships</emphasis> are similar to
 destroyers except that they are much stronger.</para>
-<para><emphasis remap='B'>Satellites</emphasis> are only useful for reconnaissance.  They can not
-be attacked.  They are launched in a random diagonal orbit, and
-stay up for 50 turns.  They can see one square farther than other
-objects.</para>
+<para><emphasis remap='B'>Satellites</emphasis> are orbital weapons platforms with Area of Effect 
+(AOE) capability. They cannot be attacked and move in a random diagonal orbit for 
+50 turns. Satellites scan a wide area (radius 7) revealing terrain and cities, 
+and deal AOE damage (radius 2) to all enemy units they pass over, making them 
+valuable for clearing out groups of enemy forces.</para>
 
 <para>All ships can move only on the sea.  Ships can also dock in a
 user-owned city.  Docked ships have damage repaired at the
@@ -1099,9 +1100,8 @@ a "movie".</para>
 
 <para>The savefile format changed incompatibly after version 1.13.</para>
 
-<para>Satellites are not completely implemented.  You should be able to
-move to a square that contains a satellite, but the program won't
-let you.  Enemy satellites should not cause your pieces to awaken.</para>
+<para>Satellites now have full AOE capability and cannot be moved onto 
+by design (orbital units).</para>
 </refsect1>
 
 <refsect1 id='authors'><title>AUTHORS</title>

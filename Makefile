@@ -56,7 +56,7 @@ OFILES = \
 	usermove.o \
 	util.o
 
-all: tnw
+all: tnw tnw.6 tnw.html
 
 tnw: $(OFILES)
 	$(CC) $(PROFILE) -o tnw $(OFILES) $(LIBS)
@@ -79,8 +79,14 @@ util.o:: extern.h empire.h
 empire.6: vms-empire.xml
 	xmlto man vms-empire.xml
 
+tnw.6: tnw.xml
+	xmlto man tnw.xml
+
 vms-empire.html: vms-empire.xml
 	xmlto html-nochunks vms-empire.xml
+
+tnw.html: tnw.xml
+	xmlto html-nochunks tnw.xml
 
 TAGS: $(HEADERS) $(FILES)
 	etags $(HEADERS) $(FILES)

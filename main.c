@@ -36,7 +36,7 @@ options:
 #include <string.h>
 #include <unistd.h>
 
-#define OPTFLAGS "w:s:d:S:f:p:a:"
+#define OPTFLAGS "w:s:d:S:f:p:b"
 
 int main(int argc, char *argv[]) {
 	int c;
@@ -44,8 +44,10 @@ int main(int argc, char *argv[]) {
 	extern int optind;
 	int errflg = 0;
 	int wflg, sflg, dflg, Sflg, pflg;
-	int aflg = 0; /* AI mask - default no AI players */
 	int land;
+	int i, j;
+	int bflg = 0; /* box map flag */
+	int textflg = 0; /* text map flag */
 
 	wflg = 70; /* set defaults */
 	sflg = 5;
@@ -54,10 +56,35 @@ int main(int argc, char *argv[]) {
 	pflg = 2; /* default to 2 players for hotseat */
 	game.savefile = "empire.sav";
 	game.ai_mask = 0; /* default: all human players */
+	game.sim_mode = false; /* default: human plays */
+	game.box_map = false; /* default: normal map generation */
+	game.text_mode = false; /* default: don't print text map */
 
 	/*
-	 * extract command line options
+	 * Check for --sim and --text options before getopt processing
 	 */
+	for (i = 1; i < argc; i++) {
+		if (strcmp(argv[i], "--sim") == 0) {
+			game.sim_mode = true;
+			/* In sim mode, all players are AI-controlled */
+			game.ai_mask = 0xF; /* all 4 players as AI */
+			game.automove = true; /* run automatically */
+			/* Remove --sim from argv by shifting remaining args */
+			for (j = i; j < argc - 1; j++) {
+				argv[j] = argv[j + 1];
+			}
+			argc--;
+			i--;
+		} else if (strcmp(argv[i], "--text") == 0) {
+			textflg = 1;
+			/* Remove --text from argv by shifting remaining args */
+			for (j = i; j < argc - 1; j++) {
+				argv[j] = argv[j + 1];
+			}
+			argc--;
+			i--;
+		}
+	}
 
 	while ((c = getopt(argc, argv, OPTFLAGS)) != EOF) {
 		switch (c) {
@@ -79,13 +106,8 @@ int main(int argc, char *argv[]) {
 		case 'p':
 			pflg = atoi(optarg);
 			break;
-		case 'a':
-			aflg = atoi(optarg);
-			if (aflg < 0 || aflg > 15) {
-				(void)printf("empire: -a argument must be in the range 0..15 (4-bit bitmask).\n");
-				exit(1);
-			}
-			game.ai_mask = aflg;
+		case 'b':
+			bflg = 1;
 			break;
 		case '?': /* illegal option? */
 			errflg++;
@@ -94,8 +116,10 @@ int main(int argc, char *argv[]) {
 	}
 	if (errflg || (argc - optind) != 0) {
 		(void)printf("empire: usage: empire [-w water] [-s smooth] [-d "
-		             "delay] [-p players] [-a ai_mask] [-f savefile]\n");
-		(void)printf("  -a ai_mask: 4-bit bitmask for AI players (e.g., 1010 for P2,P4 as AI)\n");
+		             "delay] [-p players] [-f savefile] [-b] [--sim] [--text]\n");
+		(void)printf("  --sim: simulation mode - AI controls all units\n");
+		(void)printf("  -b: box map mode - simple rectangular land mass\n");
+		(void)printf("  --text: print map as text (+ for land, . for sea, o for cities) and exit\n");
 		exit(1);
 	}
 
@@ -127,6 +151,7 @@ int main(int argc, char *argv[]) {
 	game.delay_time = dflg;
 	game.save_interval = Sflg;
 	game.num_players = pflg;
+	game.box_map = bflg;
 
 	/* Set default savefile based on player count if not specified */
 	if (game.savefile == NULL || strcmp(game.savefile, "empire.sav") == 0) {
@@ -148,8 +173,22 @@ int main(int argc, char *argv[]) {
 
 	/* compute min distance between cities */
 	land = MAP_SIZE * (100 - game.WATER_RATIO) / 100; /* available land */
-	land /= NUM_CITY;                                 /* land per city */
+	land /= NUM_CITY; /* land per city */
 	game.MIN_CITY_DIST = isqrt(land); /* distance between cities */
+
+	/* Handle --text mode: print map and exit */
+	if (textflg) {
+		rndini(); /* init random number generator */
+		if (restore_game()) {
+			/* Print map from save file */
+			print_text_map(true);
+		} else {
+			/* Generate new map and print it */
+			init_game();
+			print_text_map(true);
+		}
+		return (0);
+	}
 
 	empire(); /* call main routine */
 	return (0);

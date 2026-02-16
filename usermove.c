@@ -57,7 +57,7 @@ void user_move(void) {
 			prod = game.city[i].prod;
 
 			if (prod == NOPIECE) {
-				if (game.automove) {
+				if (game.sim_mode) {
 					game.city[i].prod = ARMY;
 					game.city[i].work = 0;
 				} else {
@@ -161,10 +161,29 @@ void piece_move(piece_info_t *obj) {
 		loc_t saved_loc = obj->loc;   /* remember starting location */
 
 		if (awake(obj) || need_input) { /* need user input? */
-			ask_user(obj);
-			topini();                /* clear info lines */
-			display_loc_u(obj->loc); /* let user see result */
-			(void)redisplay();
+			/* In sim mode, set default function instead of asking user */
+			if (game.sim_mode) {
+				if (obj->func == NOFUNC) {
+					/* Set default function based on unit type */
+					if (obj->type == ARMY || obj->type == MARINE) {
+						obj->func = ARMYATTACK;
+					} else if (obj->type == FIGHTER) {
+						/* Use EXPLORE for fighters in sim mode - LAND only works for USER */
+						obj->func = EXPLORE;
+					} else if (obj->type == PATROL || obj->type == DESTROYER) {
+						obj->func = RANDOM;
+					} else if (obj->type == TRANSPORT || obj->type == CARRIER) {
+						obj->func = WFTRANSPORT;
+					} else {
+						obj->func = EXPLORE;
+					}
+				}
+			} else {
+				ask_user(obj);
+				topini();                /* clear info lines */
+				display_loc_u(obj->loc); /* let user see result */
+				(void)redisplay();
+			}
 			need_input = false; /* we got it */
 		}
 
@@ -175,9 +194,13 @@ void piece_move(piece_info_t *obj) {
 			case RANDOM:
 				move_random(obj);
 				break;
-			case SENTRY:
-				obj->moved = speed;
-				break;
+		case SENTRY:
+			/* Armies and marines become entrenched on sentry */
+			if (obj->type == ARMY || obj->type == MARINE) {
+				obj->entrenched = true;
+			}
+			obj->moved = speed;
+			break;
 			case FILL:
 				move_fill(obj);
 				break;
@@ -319,6 +342,7 @@ void move_explore(piece_info_t *obj) {
 		terrain = "+";
 		break;
 	case FIGHTER:
+	case BOMBER:
 		loc = vmap_find_aobj(path_map, game.user_map, obj->loc,
 		                     &user_fighter);
 		terrain = "+.O";
@@ -583,6 +607,7 @@ void move_to_dest(piece_info_t *obj, loc_t dest) {
 		mterrain = "+";
 		break;
 	case FIGHTER:
+	case BOMBER:
 		fterrain = T_AIR;
 		mterrain = "+.O";
 		break;
@@ -996,6 +1021,7 @@ void user_dir(piece_info_t *obj, int dir) {
 		user_dir_army(obj, loc);
 		break;
 	case FIGHTER:
+	case BOMBER:
 		user_dir_fighter(obj, loc);
 		break;
 	default:

@@ -15,6 +15,7 @@ object.c -- routines for manipulating objects.
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 extern int get_piece_name(void);
 
@@ -281,6 +282,7 @@ void produce(city_info_t *cityp) {
 	new->ship = NULL;
 	new->count = 0;
 	new->range = piece_attr[(int)cityp->prod].range;
+	new->entrenched = false;
 
 	if (new->type == SATELLITE) { /* set random move direction */
 		new->func = sat_dir[irand(4)];
@@ -307,6 +309,9 @@ void move_obj(piece_info_t *obj, loc_t new_loc) {
 	obj->moved += 1;
 	obj->loc = new_loc;
 	obj->range--;
+	
+	/* Moving loses entrenchment */
+	obj->entrenched = false;
 
 	disembark(obj); /* remove object from any ship */
 
@@ -399,15 +404,53 @@ static void move_sat1(piece_info_t *obj) {
 }
 
 /*
+Apply AOE damage from satellite orbital strike.
+Damages all enemy pieces within radius 2 of the satellite.
+*/
+
+static void satellite_aoe(piece_info_t *sat, loc_t loc) {
+	piece_info_t *p;
+	int i;
+	
+	/* AOE radius 2 - damage all enemy pieces nearby */
+	for (i = 0; i < MAP_SIZE; i++) {
+		if (!game.real_map[i].on_board)
+			continue;
+		
+		/* Check if within AOE radius 2 */
+		int dist = abs(loc_row(i) - loc_row(loc)) + abs(loc_col(i) - loc_col(loc));
+		if (dist > 2)
+			continue;
+		
+/* Damage enemy pieces */
+		for (p = game.real_map[i].objp; p != NULL; p = p->loc_link.next) {
+			if (p->owner != sat->owner && p->owner != UNOWNED) {
+				/* Satellite AOE does 1 damage to all enemy units */
+				p->hits -= 1;
+				if (p->hits <= 0) {
+					/* Show message for any unit destruction (player or AI) */
+					comment("Satellite AOE destroyed %s at %d!",
+					        piece_attr[p->type].name, loc_disp(i));
+					kill_obj(p, i);
+				}
+			}
+		}
+	}
+}
+
+/*
 Now move the satellite all of its squares.
 Satellite burns iff it's range reaches zero.
+Satellite also applies AOE damage to enemies within radius 2.
 */
 
 void move_sat(piece_info_t *obj) {
 	obj->moved = 0;
-
+	
 	while (obj->moved < obj_moves(obj)) {
 		move_sat1(obj);
+		/* Apply AOE damage at each step */
+		satellite_aoe(obj, obj->loc);
 		if (obj->range <= 0) {
 			if (obj->owner == USER)
 				comment("Satellite at %d crashed and burned.",
@@ -530,20 +573,48 @@ void scan(view_map_t vmap[], loc_t loc) {
 
 /*
 Scan a portion of the board for a satellite.
+Satellites now scan a much larger area (radius 7) to justify their cost.
+They reveal all terrain and cities in the recon area.
 */
 
 void scan_sat(view_map_t vmap[], loc_t loc) {
-	int i;
+int i, j;
 
-	ASSERT(game.real_map[loc].on_board);
+ASSERT(game.real_map[loc].on_board);
 
-	for (i = 0; i < 8; i++) { /* for each surrounding cell */
-		loc_t xloc = loc + 2 * dir_offset[i];
-		if (xloc >= 0 && xloc < MAP_SIZE &&
-		    game.real_map[xloc].on_board)
-			scan(vmap, xloc);
+/* Scan wider area (radius 7) for satellite recon - reveals terrain */
+for (i = -7; i <= 7; i++) {
+	for (j = -7; j <= 7; j++) {
+		loc_t xloc = loc + i * MAP_WIDTH + j;
+		if (xloc >= 0 && xloc < MAP_SIZE && game.real_map[xloc].on_board) {
+			if (abs(i) <= 5 && abs(j) <= 5) { /* box pattern for performance */
+				/* Reveal terrain */
+				if (game.real_map[xloc].contents == MAP_LAND ||
+				    game.real_map[xloc].contents == MAP_SEA ||
+				    game.real_map[xloc].contents == MAP_CITY) {
+					vmap[xloc].contents = game.real_map[xloc].contents;
+					vmap[xloc].seen = game.date;
+				}
+			}
+		}
 	}
-	scan(vmap, loc);
+}
+
+/* Scan immediate surroundings thoroughly (radius 1-2) */
+for (i = 0; i < 8; i++) {
+	loc_t xloc = loc + dir_offset[i];
+	if (xloc >= 0 && xloc < MAP_SIZE && game.real_map[xloc].on_board)
+		scan(vmap, xloc);
+}
+
+/* Scan at distance 2 */
+for (i = 0; i < 8; i++) {
+	loc_t xloc = loc + 2 * dir_offset[i];
+	if (xloc >= 0 && xloc < MAP_SIZE && game.real_map[xloc].on_board)
+		scan(vmap, xloc);
+}
+
+scan(vmap, loc);
 }
 
 /*
@@ -567,8 +638,14 @@ void update(view_map_t vmap[], loc_t loc) {
 
 		if (p == NULL) /* nothing here? */
 			vmap[loc].contents = game.real_map[loc].contents;
-		else if (p->owner >= USER && p->owner <= USER4)
-			vmap[loc].contents = piece_attr[p->type].sname;
+		else if (p->owner >= USER && p->owner <= USER4) {
+			/* Entrenched armies/marines show as lowercase */
+			if (p->entrenched && (p->type == ARMY || p->type == MARINE)) {
+				vmap[loc].contents = tolower(piece_attr[p->type].sname);
+			} else {
+				vmap[loc].contents = piece_attr[p->type].sname;
+			}
+		}
 		else
 			vmap[loc].contents = tolower(piece_attr[p->type].sname);
 	}

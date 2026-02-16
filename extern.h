@@ -49,6 +49,8 @@ extern move_info_t user4_army_attack;
 extern move_info_t user_fighter;
 extern move_info_t user_ship;
 extern move_info_t user_ship_repair;
+extern void ai_city_production(int owner);
+extern void ai_player_move(int owner);
 extern loc_t find_attack(loc_t, char *, char *);
 
 extern char *help_cmd[];
@@ -150,6 +152,7 @@ void save_game(void);
 int restore_game(void);
 void save_movie_screen(void);
 void replay_movie(void);
+void print_text_map(bool show_cities);
 
 void get_str(char *buf, int sizep); /* input routines */
 void get_strq(char *buf, int sizep);

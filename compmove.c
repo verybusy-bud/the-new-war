@@ -32,6 +32,66 @@ void move_objective(piece_info_t *obj, path_map_t pathmap[], loc_t new_loc,
 void comp_set_prod(city_info_t *, int);
 void comp_set_needed(city_info_t *, int *, bool, bool);
 void comp_prod(city_info_t *, bool);
+void piece_move(piece_info_t *);
+loc_t find_attack(loc_t, char *, char *);
+
+/*
+AI city production for AI-controlled human players
+*/
+void ai_city_production(int owner) {
+	int i;
+	
+	for (i = 0; i < NUM_CITY; i++) {
+		if (game.city[i].owner == owner) {
+			/* If no production set, default to ARMY */
+			if (game.city[i].prod == NOPIECE) {
+				game.city[i].prod = ARMY;
+				game.city[i].work = 0;
+			}
+			/* Produce if ready */
+			if (game.city[i].work++ >= (long)piece_attr[(int)game.city[i].prod].build_time) {
+				produce(&game.city[i]);
+			}
+		}
+	}
+}
+
+/*
+AI movement for AI-controlled human players
+*/
+void ai_player_move(int owner) {
+	int i;
+	piece_info_t *obj;
+	view_map_t *player_map = MAP(owner);
+	
+	/* Update player's view of the world */
+	for (i = 0; i < NUM_OBJECTS; i++) {
+		for (obj = game.user_obj[i]; obj != NULL;
+		     obj = obj->piece_link.next) {
+			if (obj->owner == owner) {
+				obj->moved = 0;
+				scan(player_map, obj->loc);
+			}
+		}
+	}
+	
+	/* Move all pieces for this player */
+	for (i = 0; i < NUM_OBJECTS; i++) {
+		for (obj = game.user_obj[move_order[i]]; obj != NULL;
+		     obj = obj->piece_link.next) {
+			if (obj->owner == owner && !obj->moved) {
+				/* Set default function for armies */
+				if ((obj->type == ARMY || obj->type == MARINE) && obj->func == NOFUNC) {
+					obj->func = ARMYATTACK;
+				}
+				/* Move the piece */
+				piece_move(obj);
+			}
+		}
+	}
+	
+	(void)redisplay();
+}
 
 void comp_move(int nmoves) {
 	void do_cities(void), do_pieces(void), check_endgame(void);
@@ -463,6 +523,7 @@ void move1(piece_info_t *obj) {
 		transport_move(obj);
 		break;
 	case FIGHTER:
+	case BOMBER:
 		fighter_move(obj);
 		break;
 	default:
@@ -1018,6 +1079,7 @@ void move_objective(piece_info_t *obj, path_map_t pathmap[], loc_t new_loc,
 		terrain = "+";
 		break;
 	case FIGHTER:
+	case BOMBER:
 		terrain = "+.X";
 		break;
 	default:
@@ -1061,6 +1123,7 @@ void move_objective(piece_info_t *obj, path_map_t pathmap[], loc_t new_loc,
 		/* check for immediate attack */
 		switch (obj->type) {
 		case FIGHTER:
+		case BOMBER:
 			if (game.comp_map[old_dest].contents !=
 			        'X' /* watch fuel */
 			    && obj->range <= piece_attr[FIGHTER].range / 2)

@@ -27,6 +27,54 @@ if any.
 #include "empire.h"
 #include "extern.h"
 
+/*
+Battleship bombardment - neutralizes a city without capturing it
+*/
+void bombard_city(piece_info_t *att_obj, loc_t loc) {
+	city_info_t *cityp;
+	int att_owner, city_owner;
+
+	cityp = find_city(loc);
+	if (cityp == NULL) return;
+	
+	att_owner = att_obj->owner;
+	city_owner = cityp->owner;
+	
+	/* Check if city is already unowned */
+	if (city_owner == UNOWNED) {
+		return;
+	}
+	
+	/* Battleship bombardment always succeeds but may miss sometimes */
+	if (irand(4) == 0) { /* 25% chance to miss */
+		if (IS_ATTACKER_HUMAN(att_owner)) {
+			comment("Your battleship's bombardment missed!");
+			ksend("Your battleship's bombardment missed at %d.\n",
+			      loc_disp(loc));
+		}
+	} else {
+		/* Neutralize the city */
+		cityp->owner = UNOWNED;
+		cityp->prod = NOPIECE;
+		cityp->work = 0;
+		
+		if (IS_ATTACKER_HUMAN(att_owner)) {
+			comment("Your battleship has neutralized the city!");
+			ksend("Your battleship has neutralized the city at %d!\n",
+			      loc_disp(loc));
+		} else {
+			comment("A city has been neutralized by bombardment!");
+		}
+	}
+	
+	/* Battleship uses up its move */
+	att_obj->moved = piece_attr[att_obj->type].speed;
+	
+	/* Update maps */
+	scan(game.user_map, loc);
+	scan(game.comp_map, loc);
+}
+
 void attack_city(piece_info_t *att_obj, loc_t loc) {
 	city_info_t *cityp;
 	int att_owner, city_owner;
@@ -113,10 +161,18 @@ void attack_obj(piece_info_t *att_obj, loc_t loc) {
 	}
 
 	while (att_obj->hits > 0 && def_obj->hits > 0) {
+		int att_strength = piece_attr[att_obj->type].strength;
+		int def_strength = piece_attr[def_obj->type].strength;
+		
+		/* Entrenched armies/marines get defensive bonus */
+		if (def_obj->entrenched && (def_obj->type == ARMY || def_obj->type == MARINE)) {
+			def_strength += 1;  /* +1 defensive strength */
+		}
+		
 		if (irand(2) == 0) /* defender hits? */ {
-			att_obj->hits -= piece_attr[def_obj->type].strength;
+			att_obj->hits -= def_strength;
 		} else {
-			def_obj->hits -= piece_attr[att_obj->type].strength;
+			def_obj->hits -= att_strength;
 		}
 	}
 
@@ -142,7 +198,12 @@ void attack(piece_info_t *att_obj, loc_t loc) {
 			/* Cannot attack your own city */
 			return;
 		}
-		attack_city(att_obj, loc);
+		/* Battleships can bombard and neutralize cities */
+		if (att_obj->type == BATTLESHIP) {
+			bombard_city(att_obj, loc);
+		} else {
+			attack_city(att_obj, loc);
+		}
 	} else {
 		attack_obj(att_obj, loc); /* attacking a piece */
 	}
@@ -200,6 +261,7 @@ void describe(piece_info_t *win_obj, piece_info_t *lose_obj, loc_t loc) {
 					       diff);
 					break;
 				case FIGHTER:
+				case BOMBER:
 					ksend("%d fighters fell overboard and "
 					      "were lost in the assult.\n",
 					      diff); // kermyt

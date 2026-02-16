@@ -71,8 +71,11 @@ piece_attr_t piece_attr[] = {
 	{'B', "battleship", "battleship", "a battleship", "battleships",
 		".",  40, 2, 10, 2, 0, INFINITY},
 		
-	{'Z', "satellite", "satellite", "a satellite", "satellites",
-		".+", 50, 0, 1, 10, 0, 500}
+{'Z', "satellite", "satellite", "a satellite", "satellites",
+".+", 50, 2, 1, 10, 0, 500}, /* strength 2 with AOE effect */
+
+	{'U', "bomber", "bomber", "a bomber", "bombers",
+		".+", 30, 2, 1, 6, 0, 80}
 };
 
 /* Direction offsets. */
@@ -94,17 +97,18 @@ char *func_name[] = {"none", "random", "sentry", "fill", "land",
 			"W", "E", "D", "C", "X", "Z", "A", "Q"};
 
 /* The order in which pieces should be moved. */
-int move_order[] = {SATELLITE, TRANSPORT, CARRIER, BATTLESHIP, 
+int move_order[] = {SATELLITE, BOMBER, TRANSPORT, CARRIER, BATTLESHIP, 
 		    PATROL, SUBMARINE, DESTROYER, ARMY, MARINE, FIGHTER};
 
 /* types of pieces, in declared order */
-char type_chars[] = "AMFPDSTCBZ";
+char type_chars[] = "AMFPDSTCBZU";
 
 /* Lists of attackable objects if object is adjacent to moving piece. */
 
 char tt_attack[] = "T";
-char army_attack[] = "O*TACFBSDP";
-char fighter_attack[] = "TCFBSDPA";
+char army_attack[] = "O*TXMACFBSDP";
+char fighter_attack[] = "TCFBSDPAX";
+char bomber_attack[] = "TCFBSDPAX";
 char ship_attack[] = "TCBSDP";
 
 /* Define various types of objectives */

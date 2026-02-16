@@ -38,7 +38,6 @@ void init_game(void) {
 	count_t i;
 	
 	kill_display(); /* nothing on screen */
-	game.automove = false;
 	game.resigned = false;
 	game.debug = false;
 	game.print_debug = false;
@@ -132,6 +131,32 @@ void make_map(void) {
 	count_t i, j, sum;
 	loc_t loc;
 
+	/* If box_map mode, create a simple rectangular land mass */
+	if (game.box_map) {
+		/* Create a medium-sized box in the center of the map */
+		int box_top = MAP_HEIGHT / 4;
+		int box_bottom = MAP_HEIGHT * 3 / 4;
+		int box_left = MAP_WIDTH / 4;
+		int box_right = MAP_WIDTH * 3 / 4;
+		
+		for (i = 0; i < MAP_SIZE; i++) {
+			int row = loc_row(i);
+			int col = loc_col(i);
+			
+			/* Check if inside the box */
+			if (row >= box_top && row < box_bottom && col >= box_left && col < box_right) {
+				game.real_map[i].contents = MAP_LAND;
+			} else {
+				game.real_map[i].contents = MAP_SEA;
+			}
+			game.real_map[i].objp = NULL;
+			game.real_map[i].cityp = NULL;
+			game.real_map[i].on_board = !(col == 0 || col == MAP_WIDTH - 1 ||
+			                              row == 0 || row == MAP_HEIGHT - 1);
+		}
+		return;
+	}
+
 	for (i = 0; i < MAP_SIZE;
 	     i++) { /* fill game.real_map with random sand */
 		height[0][i] = irand(MAX_HEIGHT);
@@ -213,10 +238,18 @@ void place_cities(void) {
 
 	count_t placed;
 	count_t num_land;
+	int num_cities_to_place;
+
+	/* Use fewer cities in box map mode */
+	if (game.box_map) {
+		num_cities_to_place = NUM_CITY_BOX;
+	} else {
+		num_cities_to_place = NUM_CITY;
+	}
 
 	num_land = 0; /* nothing in land array yet */
 	placed = 0;   /* nothing placed yet */
-	while (placed < NUM_CITY) {
+	while (placed < num_cities_to_place) {
 		count_t i;
 		loc_t loc;
 
@@ -240,6 +273,12 @@ void place_cities(void) {
 
 		/* Now remove any land too close to selected land. */
 		num_land = remove_land(loc, num_land);
+	}
+	
+	/* Mark remaining cities as unused (for box map mode with fewer cities) */
+	for (count_t i = placed; i < NUM_CITY; i++) {
+		game.city[i].loc = -1;
+		game.city[i].owner = UNOWNED;
 	}
 }
 
@@ -379,7 +418,69 @@ bool select_cities(void) {
 		}
 	}
 	
-	error("DEBUG: available_conts: %d %d %d %d", available_conts[0], available_conts[1], available_conts[2], available_conts[3]);
+	/* In box_map mode, spawn players in corners */
+	if (game.box_map) {
+		/* Define corner regions within the box */
+		int box_top = MAP_HEIGHT / 4;
+		int box_bottom = MAP_HEIGHT * 3 / 4;
+		int box_left = MAP_WIDTH / 4;
+		int box_right = MAP_WIDTH * 3 / 4;
+		
+		loc_t corner_locs[4] = {
+			row_col_loc(box_top + 2, box_left + 2),                  /* top-left */
+			row_col_loc(box_top + 2, box_right - 3),                 /* top-right */
+			row_col_loc(box_bottom - 3, box_left + 2),                /* bottom-left */
+			row_col_loc(box_bottom - 3, box_right - 3)                /* bottom-right */
+		};
+		
+		/* Assign each player to a corner */
+		for (i = 0; i < game.num_players && i < 4; i++) {
+			loc_t target = corner_locs[i];
+			city_info_t *best_city = NULL;
+			long best_dist = 999999;
+			
+			/* Find closest city to corner that is on land */
+			for (int c = 0; c < NUM_CITY; c++) {
+				if (game.city[c].owner == UNOWNED && game.city[c].loc >= 0 && game.city[c].loc < MAP_SIZE) {
+					int row = loc_row(game.city[c].loc);
+					int col = loc_col(game.city[c].loc);
+					/* Only consider cities inside the box (land) */
+					if (row >= box_top && row < box_bottom && col >= box_left && col < box_right) {
+						long d = dist(game.city[c].loc, target);
+						if (d < best_dist) {
+							best_dist = d;
+							best_city = &game.city[c];
+						}
+					}
+				}
+			}
+			
+			if (best_city != NULL) {
+				assigned_city_locs[i] = best_city->loc;
+				/* Set owner */
+				switch (i) {
+					case 0: best_city->owner = USER; break;
+					case 1: best_city->owner = USER2; break;
+					case 2: best_city->owner = USER3; break;
+					case 3: best_city->owner = USER4; break;
+				}
+			best_city->work = 0;
+			scan(game.user_map, best_city->loc);
+			
+			if (!game.sim_mode) {
+				best_city->prod = NOPIECE;
+				set_prod(best_city);
+			} else {
+				best_city->prod = ARMY;
+				best_city->work = 0;
+			}
+				
+				topmsg(1, "%s's city is at %d.", game.player[i].name, loc_disp(best_city->loc));
+				delay();
+			}
+		}
+		return true;
+	}
 	
 	/* Assign human players */
 	for (i = 0; i < game.num_players; i++) {
@@ -476,8 +577,14 @@ bool select_cities(void) {
 		player_city->work = 0;
 		scan(game.user_map, player_city->loc);
 		
-		/* Set production for all players */
-		set_prod(player_city);
+		/* Set production for all players - skip if in sim mode */
+		if (!game.sim_mode) {
+			set_prod(player_city);
+		} else {
+			/* Default to ARMY in sim mode */
+			player_city->prod = ARMY;
+			player_city->work = 0;
+		}
 		
 		topmsg(1, "%s's city is at %d.", game.player[i].name, loc_disp(player_city->loc));
 		delay();
@@ -1390,6 +1497,34 @@ void stat_display(char *mbuf, int round) {
 	pos_str(1, (int)i * 6, "%5d", user_cost);
 	pos_str(2, (int)i * 6, "%5d", comp_cost);
 	pos_str(0, 0, "Round %3d", (round + 1) / 2);
+}
+
+/*
+Print the map in text format.
+Land is shown as '+', sea as '.', cities as 'o' or 'O'.
+If show_cities is true, cities are marked; otherwise just land/sea.
+*/
+void print_text_map(bool show_cities) {
+	loc_t i;
+	int row, col;
+	char c;
+	
+	for (row = 0; row < MAP_HEIGHT; row++) {
+		for (col = 0; col < MAP_WIDTH; col++) {
+			i = row_col_loc(row, col);
+			if (!game.real_map[i].on_board) {
+				c = ' ';
+			} else if (show_cities && game.real_map[i].contents == MAP_CITY) {
+				c = 'o';
+			} else if (game.real_map[i].contents == MAP_LAND) {
+				c = '+';
+			} else {
+				c = '.';
+			}
+			(void)printf("%c", c);
+		}
+		(void)printf("\n");
+	}
 }
 
 /* end */

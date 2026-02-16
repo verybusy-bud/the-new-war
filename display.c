@@ -361,6 +361,8 @@ static void disp_square(view_map_t *vp, loc_t loc) {
 		case 'M':
 		case 'f':
 		case 'F':
+		case 'u':
+		case 'U':
 		case 'p':
 		case 'P':
 		case 'd':
@@ -376,6 +378,7 @@ static void disp_square(view_map_t *vp, loc_t loc) {
 		case 'z':
 		case 'Z':
 			attr = COLOR_PAIR(COLOR_YELLOW) | A_REVERSE | A_DIM;
+			break;
 		case 'X':
 			{
 				piece_info_t *obj = find_obj_at_loc(loc);
