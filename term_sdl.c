@@ -12,16 +12,23 @@
 #include <ctype.h>
 
 #define SCREEN_WIDTH 1200
-#define SCREEN_HEIGHT 800
-#define TILE_SIZE 14
+#define SCREEN_HEIGHT 900
+#define TILE_SIZE 10
 #define MAP_OFFSET_X 10
-#define MAP_OFFSET_Y 80
+#define MAP_OFFSET_Y 50
 #define TEXT_LINE_HEIGHT 16
-#define MAX_TEXT_LINES 30
+#define MAX_TEXT_LINES 12
 
 static SDL_Window *window = NULL;
 static SDL_Renderer *renderer = NULL;
 static bool sdl_initialized = false;
+
+/* BMP surfaces for units and terrain */
+static SDL_Surface *bmp_land = NULL;
+static SDL_Surface *bmp_sea = NULL;
+static SDL_Surface *bmp_city = NULL;
+static SDL_Surface *bmp_units[6] = {NULL};
+static SDL_Surface *bmp_unknown = NULL;
 
 /* Text buffer for messages */
 static char text_buffer[MAX_TEXT_LINES][256];
@@ -96,6 +103,19 @@ void sdl_init(void) {
     sdl_initialized = true;
     memset(text_buffer, 0, sizeof(text_buffer));
     text_lines_used = 0;
+    
+    /* Load BMP images */
+    bmp_land = SDL_LoadBMP("land.bmp");
+    bmp_sea = SDL_LoadBMP("sea.bmp");
+    bmp_city = SDL_LoadBMP("city.bmp");
+    bmp_unknown = SDL_LoadBMP("unknown.bmp");
+    
+    /* Load unit BMPs */
+    bmp_units[1] = SDL_LoadBMP("a1.bmp");
+    bmp_units[2] = SDL_LoadBMP("a2.bmp");
+    bmp_units[3] = SDL_LoadBMP("a3.bmp");
+    bmp_units[4] = SDL_LoadBMP("a4.bmp");
+    bmp_units[5] = SDL_LoadBMP("a5.bmp");
 }
 
 void sdl_close(void) {
@@ -119,29 +139,54 @@ void sdl_present(void) {
 void draw_tile(int screen_x, int screen_y, char contents, int owner, int seen) {
     if (!sdl_initialized) return;
     
-    /* Terrain colors */
-    if (contents == '*' || contents == 'X' || contents == '+') {
-        draw_rect(screen_x, screen_y, TILE_SIZE, TILE_SIZE, C_DARK_GREEN);
-    } else if (contents == 'O') {
-        draw_rect(screen_x, screen_y, TILE_SIZE, TILE_SIZE, C_DARK_BLUE);
-    } else if (contents == ' ' || contents == '.' || contents == '-') {
-        draw_rect(screen_x, screen_y, TILE_SIZE, TILE_SIZE, C_BLUE);
+    SDL_Rect dst = {screen_x, screen_y, TILE_SIZE, TILE_SIZE};
+    SDL_Texture *tex = NULL;
+    
+    /* Try to use BMP, fall back to colors */
+    if (!seen) {
+        if (bmp_unknown) {
+            tex = SDL_CreateTextureFromSurface(renderer, bmp_unknown);
+        }
+        if (!tex) draw_rect(screen_x, screen_y, TILE_SIZE, TILE_SIZE, C_DARK_GRAY);
+    } else if (contents == '*' || contents == 'X' || contents == '+') {
+        if (bmp_land) tex = SDL_CreateTextureFromSurface(renderer, bmp_land);
+        if (!tex) draw_rect(screen_x, screen_y, TILE_SIZE, TILE_SIZE, C_DARK_GREEN);
+    } else if (contents == 'O' || contents == ' ' || contents == '.' || contents == '-') {
+        if (bmp_sea) tex = SDL_CreateTextureFromSurface(renderer, bmp_sea);
+        if (!tex) draw_rect(screen_x, screen_y, TILE_SIZE, TILE_SIZE, C_DARK_BLUE);
     } else if (contents == '^') {
         draw_rect(screen_x, screen_y, TILE_SIZE, TILE_SIZE, C_GRAY);
     } else {
         draw_rect(screen_x, screen_y, TILE_SIZE, TILE_SIZE, C_BLACK);
     }
     
-    /* Units/cities */
-    if (owner > 0 && owner <= 5) {
-        Color c = get_player_color(owner);
-        int padding = 3;
-        draw_rect(screen_x + padding, screen_y + padding, 
-                  TILE_SIZE - 2*padding, TILE_SIZE - 2*padding, 
-                  c.r, c.g, c.b);
+    if (tex) {
+        SDL_RenderCopy(renderer, tex, NULL, &dst);
+        SDL_DestroyTexture(tex);
     }
     
-    draw_border(screen_x, screen_y, TILE_SIZE, TILE_SIZE, 40, 40, 40);
+    /* Draw unit/city on top */
+    if (owner > 0 && owner <= 5) {
+        if (owner <= 4 && bmp_city) {
+            SDL_Texture *city_tex = SDL_CreateTextureFromSurface(renderer, bmp_city);
+            if (city_tex) {
+                SDL_RenderCopy(renderer, city_tex, NULL, &dst);
+                SDL_DestroyTexture(city_tex);
+            }
+        } else if (bmp_units[owner]) {
+            SDL_Texture *unit_tex = SDL_CreateTextureFromSurface(renderer, bmp_units[owner]);
+            if (unit_tex) {
+                SDL_RenderCopy(renderer, unit_tex, NULL, &dst);
+                SDL_DestroyTexture(unit_tex);
+            }
+        } else {
+            Color c = get_player_color(owner);
+            int padding = 3;
+            draw_rect(screen_x + padding, screen_y + padding, 
+                      TILE_SIZE - 2*padding, TILE_SIZE - 2*padding, 
+                      c.r, c.g, c.b);
+        }
+    }
 }
 
 void draw_map(void) {
