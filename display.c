@@ -717,11 +717,13 @@ Redraw the screen.
 
 void redisplay(void) { 
 	(void)refresh(); 
+#ifdef USE_SDL
 	if (is_sdl_active()) {
 		sdl_clear_screen();
 		sdl_draw_map(game.user_map, USER);
 		sdl_refresh();
 	}
+#endif
 }
 
 void redraw(void) {

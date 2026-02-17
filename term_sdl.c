@@ -35,6 +35,16 @@ static char msg_line3[256] = "";
 
 static bool need_delay = false;
 
+bool move_cursor(loc_t *cursor, int offset) {
+    (void)cursor;
+    (void)offset;
+    return false;
+}
+
+int cbreak(void) { return 0; }
+int nocbreak(void) { return 0; }
+int beep(void) { return 0; }
+
 /* Colors */
 #define C_BLACK 0, 0, 0
 #define C_WHITE 255, 255, 255

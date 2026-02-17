@@ -70,6 +70,7 @@ OFILES = \
 	map.o \
 	math.o \
 	object.o \
+	sdl_stubs.o \
 	term.o \
 	usermove.o \
 	util.o
@@ -85,7 +86,6 @@ SDL_OFILES = \
 	map_sdl.o \
 	math_sdl.o \
 	object_sdl.o \
-	sdl_stubs.o \
 	term_sdl.o \
 	usermove_sdl.o \
 	util_sdl.o
