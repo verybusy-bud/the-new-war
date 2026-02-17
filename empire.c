@@ -34,6 +34,9 @@ void empire(void) {
 	char order;
 	int turn = 0;
 
+	/* Initialize SDL for GUI if available */
+	init_sdl_display();
+	
 	ttinit(); /* init tty */
 	rndini(); /* init random number generator */
 

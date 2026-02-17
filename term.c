@@ -217,6 +217,19 @@ Get a character from the user and convert it to uppercase.
 char get_chx(void) {
 	char c;
 
+	/* Check for SDL input if SDL is active */
+	if (is_sdl_active()) {
+		int sdl_key = sdl_get_input();
+		if (sdl_key > 0) {
+			c = (char)sdl_key;
+			if (islower(c)) {
+				return toupper(c);
+			}
+			return c;
+		}
+		/* If no SDL input, fall through to ncurses */
+	}
+
 	c = get_cq();
 
 	if (islower(c)) {

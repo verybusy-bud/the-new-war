@@ -16,17 +16,35 @@ DEBUG = -O2
 PROFILE =
 
 LIBS = -lncurses
+SDL_LIBS = -lSDL2
 
 # You shouldn't have to modify anything below this line.
 
 # There's a dynamic format in the object-display routines; suppress the warning
 CFLAGS = $(DEBUG) $(PROFILE) -Wall -Wno-format-security
+SDL_CFLAGS = $(DEBUG) $(PROFILE) -Wall -Wno-format-security -I/usr/include/SDL2
 
 FILES = \
 	attack.c \
 	compmove.c \
 	data.c \
 	display.c \
+	edit.c \
+	empire.c \
+	game.c \
+	main.c \
+	map.c \
+	math.c \
+	object.c \
+	term.c \
+	usermove.c \
+	util.c
+
+SDL_FILES = \
+	attack.c \
+	compmove.c \
+	data.c \
+	display_sdl.c \
 	edit.c \
 	empire.c \
 	game.c \
@@ -56,10 +74,29 @@ OFILES = \
 	usermove.o \
 	util.o
 
-all: tnw tnw.6 tnw.html
+SDL_OFILES = \
+	attack_sdl.o \
+	compmove_sdl.o \
+	data_sdl.o \
+	edit_sdl.o \
+	empire_sdl.o \
+	game_sdl.o \
+	main_sdl.o \
+	map_sdl.o \
+	math_sdl.o \
+	object_sdl.o \
+	sdl_stubs.o \
+	term_sdl.o \
+	usermove_sdl.o \
+	util_sdl.o
+
+all: tnw tnw-gui tnw.6 tnw.html
 
 tnw: $(OFILES)
 	$(CC) $(PROFILE) -o tnw $(OFILES) $(LIBS)
+
+tnw-gui: $(SDL_OFILES)
+	$(CC) $(PROFILE) -o tnw-gui $(SDL_OFILES) $(SDL_LIBS)
 
 attack.o:: extern.h empire.h
 compmove.o:: extern.h empire.h
@@ -75,6 +112,52 @@ object.o:: extern.h empire.h
 term.o:: extern.h empire.h
 usermove.o:: extern.h empire.h
 util.o:: extern.h empire.h
+
+# SDL GUI object files
+attack_sdl.o: attack.c extern.h empire.h
+	$(CC) $(SDL_CFLAGS) -DUSE_SDL -c -o $@ attack.c
+
+compmove_sdl.o: compmove.c extern.h empire.h
+	$(CC) $(SDL_CFLAGS) -DUSE_SDL -c -o $@ compmove.c
+
+data_sdl.o: data.c empire.h
+	$(CC) $(SDL_CFLAGS) -DUSE_SDL -c -o $@ data.c
+
+display_sdl.o: display_sdl.c extern.h empire.h
+	$(CC) $(SDL_CFLAGS) -c -o $@ display_sdl.c
+
+edit_sdl.o: edit.c extern.h empire.h
+	$(CC) $(SDL_CFLAGS) -DUSE_SDL -c -o $@ edit.c
+
+empire_sdl.o: empire.c extern.h empire.h
+	$(CC) $(SDL_CFLAGS) -DUSE_SDL -c -o $@ empire.c
+
+game_sdl.o: game.c extern.h empire.h
+	$(CC) $(SDL_CFLAGS) -DUSE_SDL -c -o $@ game.c
+
+main_sdl.o: main.c extern.h empire.h
+	$(CC) $(SDL_CFLAGS) -DUSE_SDL -c -o $@ main.c
+
+map_sdl.o: map.c extern.h empire.h
+	$(CC) $(SDL_CFLAGS) -DUSE_SDL -c -o $@ map.c
+
+math_sdl.o: math.c empire.h
+	$(CC) $(SDL_CFLAGS) -DUSE_SDL -c -o $@ math.c
+
+object_sdl.o: object.c extern.h empire.h
+	$(CC) $(SDL_CFLAGS) -DUSE_SDL -c -o $@ object.c
+
+term_sdl.o: term_sdl.c extern.h empire.h
+	$(CC) $(SDL_CFLAGS) -c -o $@ term_sdl.c
+
+usermove_sdl.o: usermove.c extern.h empire.h
+	$(CC) $(SDL_CFLAGS) -DUSE_SDL -c -o $@ usermove.c
+
+util_sdl.o: util.c extern.h empire.h
+	$(CC) $(SDL_CFLAGS) -DUSE_SDL -c -o $@ util.c
+
+sdl_stubs.o: sdl_stubs.c
+	$(CC) $(SDL_CFLAGS) -c -o $@ sdl_stubs.c
 
 empire.6: vms-empire.xml
 	xmlto man vms-empire.xml
@@ -120,10 +203,9 @@ uninstall:
 	rm -f /usr/share/appdata/vms-empire.xml
 
 clean:
-	rm -f *.o TAGS tnw
+	rm -f *.o TAGS tnw tnw-gui
 	rm -f *.6 *.html
 	rm -f *.sav
-	make
 
 reflow:
 	@clang-format --style="{IndentWidth: 8, UseTab: ForIndentation}" -i $$(find . -name "*.[ch]")

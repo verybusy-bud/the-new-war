@@ -715,7 +715,14 @@ void complain(void) { (void)beep(); }
 Redraw the screen.
 */
 
-void redisplay(void) { (void)refresh(); }
+void redisplay(void) { 
+	(void)refresh(); 
+	if (is_sdl_active()) {
+		sdl_clear_screen();
+		sdl_draw_map(game.user_map, USER);
+		sdl_refresh();
+	}
+}
 
 void redraw(void) {
 	(void)clearok(curscr, TRUE);

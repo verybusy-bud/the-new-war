@@ -147,6 +147,17 @@ void close_disp(void);
 void pos_str(int row, int col, char *str, ...);
 int direction(chtype c);
 
+/* SDL GUI functions */
+void init_sdl_display(void);
+void close_sdl_display(void);
+void sdl_clear_screen(void);
+void sdl_draw_map(view_map_t *vmap, int player);
+void sdl_refresh(void);
+int sdl_get_input(void);
+int sdl_wait_input(void);
+int sdl_draw_sector(view_map_t *vmap, int sector_row, int sector_col);
+bool is_sdl_active(void);
+
 void init_game(void); /* game routines */
 void save_game(void);
 int restore_game(void);
