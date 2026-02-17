@@ -1,0 +1,19 @@
+#!/bin/bash
+# run-tnw-door -- LBBS door wrapper for The New War
+#
+# Usage: Place this in your LBBS door configuration
+# It connects the user's terminal to the game server via TCP
+#
+# Configuration:
+# Set TNW_HOST to the game server hostname (default: localhost)
+# Set TNW_PORT to the game server port (default: 7777)
+
+# Use environment variables or defaults
+HOST="${TNW_HOST:-localhost}"
+PORT="${TNW_PORT:-7777}"
+
+# Path to the door executable
+DOOR_PATH="/home/mainuser/codev/github/the-new-war/door"
+
+# Run the door, connecting stdin/stdout to the game server
+exec "$DOOR_PATH" "$HOST" "$PORT"
