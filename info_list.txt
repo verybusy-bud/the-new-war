@@ -1642,3 +1642,7 @@ a marine has been completed at city 1304.
 an army has been completed at city 1557.
 a marine has been completed at city 702.
 Your city at 909 is under attack.
+an army has been completed at city 2477.
+a marine has been completed at city 162.
+Your city at 1976 is under attack.
+an army has been completed at city 2477.

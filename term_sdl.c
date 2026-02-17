@@ -26,7 +26,7 @@ static bool sdl_initialized = false;
 /* Text buffer for messages */
 static char text_buffer[MAX_TEXT_LINES][256];
 static int text_lines_used = 0;
-static int text_scroll = 0;
+static int text_scroll __attribute__((unused)) = 0;
 
 /* Message lines */
 static char msg_line1[256] = "";
@@ -219,9 +219,18 @@ void vtopmsg(int line, const char *fmt, va_list ap) {
     vsnprintf(buf, sizeof(buf), fmt, ap);
     
     switch(line) {
-        case 1: strncpy(msg_line1, buf, sizeof(msg_line1)-1); break;
-        case 2: strncpy(msg_line2, buf, sizeof(msg_line2)-1); break;
-        case 3: strncpy(msg_line3, buf, sizeof(msg_line3)-1); break;
+        case 1: 
+            strncpy(msg_line1, buf, sizeof(msg_line1)-1);
+            msg_line1[sizeof(msg_line1)-1] = '\0';
+            break;
+        case 2: 
+            strncpy(msg_line2, buf, sizeof(msg_line2)-1);
+            msg_line2[sizeof(msg_line2)-1] = '\0';
+            break;
+        case 3: 
+            strncpy(msg_line3, buf, sizeof(msg_line3)-1);
+            msg_line3[sizeof(msg_line3)-1] = '\0';
+            break;
     }
 }
 
@@ -294,7 +303,10 @@ void pos_str(int row, int col, char *str, ...) {
     vsnprintf(buf, sizeof(buf), str, ap);
     
     if (text_lines_used < MAX_TEXT_LINES) {
-        strncpy(text_buffer[text_lines_used], buf, 255);
+        size_t len = strlen(buf);
+        if (len > 254) len = 254;
+        memcpy(text_buffer[text_lines_used], buf, len);
+        text_buffer[text_lines_used][len] = '\0';
         text_lines_used++;
     }
     
