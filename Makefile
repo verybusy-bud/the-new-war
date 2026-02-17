@@ -16,7 +16,7 @@ DEBUG = -O2
 PROFILE =
 
 LIBS = -lncurses
-SDL_LIBS = -lSDL2
+SDL_LIBS = -lSDL2 -lSDL2_ttf
 
 # You shouldn't have to modify anything below this line.
 
