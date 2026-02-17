@@ -601,42 +601,20 @@ int cur_sector(void) {
 }
 
 void sector_change(void) {
-    /* SDL version: redraw current sector */
-    sdl_render();
+    /* SDL version: minimal redraw - just pump events */
+    SDL_PumpEvents();
 }
 
 void print_sector(int whose, view_map_t vmap[], int sector) {
-    /* SDL version: redraw the sector */
-    sdl_clear();
+    /* SDL version: just render the full map, ignore sector */
+    static int last_render = 0;
+    int now = SDL_GetTicks();
     
-    int sector_row = sector / SECTOR_COLS;
-    int sector_col = sector % SECTOR_COLS;
+    /* Only render every 100ms max */
+    if (now - last_render < 100) return;
+    last_render = now;
     
-    int start_row = sector_row * ROWS_PER_SECTOR;
-    int start_col = sector_col * COLS_PER_SECTOR;
-    
-    for (int y = 0; y < ROWS_PER_SECTOR && (start_row + y) < MAP_HEIGHT; y++) {
-        for (int x = 0; x < COLS_PER_SECTOR && (start_col + x) < MAP_WIDTH; x++) {
-            int loc = (start_row + y) * MAP_WIDTH + (start_col + x);
-            char contents = vmap[loc].contents;
-            int owner = 0;
-            int seen = vmap[loc].seen;
-            
-            if (game.real_map[loc].cityp) {
-                owner = game.real_map[loc].cityp->owner;
-            } else {
-                piece_info_t *p = find_obj_at_loc(loc);
-                if (p) owner = p->owner;
-            }
-            
-            draw_tile(MAP_OFFSET_X + x * TILE_SIZE, MAP_OFFSET_Y + y * TILE_SIZE, 
-                     contents, owner, seen);
-        }
-    }
-    
-    draw_messages();
-    draw_text_area();
-    sdl_present();
+    sdl_render();
 }
 
 void display_loc(int whose, view_map_t vmap[], loc_t loc) {
