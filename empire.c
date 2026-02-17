@@ -14,6 +14,7 @@ parser, and the simple commands.
 #include "empire.h"
 #include "extern.h"
 #include <stdio.h>
+#include <unistd.h>
 
 gamestate_t game;
 
@@ -28,25 +29,100 @@ void c_examine(void), c_movie(void), check_endgame(void), show_title(void);
  */
 
 void empire(void) {
-	void do_command(char);
-	void print_zoom(view_map_t *);
+void do_command(char);
+void print_zoom(view_map_t *);
 
-	char order;
-	int turn = 0;
+char order;
+int turn = 0;
 
-	ttinit(); /* init tty */
-	rndini(); /* init random number generator */
+/* In server mode, wait for players to connect BEFORE initializing curses */
+if (is_server_mode()) {
+/* Server already initialized in main, just wait for connections */
+printf("Waiting for %d players to connect...\n", game.num_players);
+printf("(Connect with: telnet <this_host> <port>)\n\n");
+while (!server_all_players_connected()) {
+server_poll();
+usleep(100000);  /* 100ms */
+if (server_num_connected() > 0) {
+printf("\r%d player(s) connected... ", server_num_connected());
+fflush(stdout);
+}
+}
+printf("\n\nAll players connected!\n");
 
-	/* Show title screen with player colors */
-	show_title();
+/* Send title screen to all clients */
+server_broadcast("\r\n");
+server_broadcast("THE NEW WAR, Version 1.1\r\n");
+server_broadcast("Detailed directions are on the empire manual page\r\n\r\n");
+server_broadcast("General 1: Red Forces\r\n");
+server_broadcast("General 2: Yellow Forces\r\n");
+server_broadcast("General 3: Purple Forces\r\n");
+server_broadcast("General 4: White Forces\r\n\r\n");
 
-	if (!restore_game()) /* try to restore previous game */ {
-		init_game(); /* otherwise init a new game */
-	}
+/* Wait for all players to press a key to continue */
+printf("Waiting for players to press ENTER to start...\n");
+server_broadcast("\r\nPress ENTER to start the game...\r\n");
 
-	/* Command loop starts here. */
-	for (;;) {                   /* until user quits */
-		if (game.automove) { /* don't ask for cmd in auto mode */
+/* Flush all client output before waiting */
+for (int i = 0; i < 4; i++) {
+server_poll();
+usleep(100000);
+}
+
+/* Wait for each player to press enter - track which players are ready */
+int player_ready[4] = {0, 0, 0, 0};
+int total_ready = 0;
+while (total_ready < game.num_players) {
+total_ready = 0;
+for (int p = 0; p < game.num_players; p++) {
+if (player_ready[p]) {
+total_ready++;
+continue;
+}
+/* Check if player has pressed enter */
+if (server_has_input(p)) {
+char c = server_get_char(p);
+/* Any key press counts as ready */
+if (c == '\r' || c == '\n' || (c >= 32 && c < 127)) {
+player_ready[p] = 1;
+printf("Player %d is ready\n", p + 1);
+server_broadcast("Player ");
+char buf[16];
+snprintf(buf, sizeof(buf), "%d", p + 1);
+server_broadcast(buf);
+server_broadcast(" is ready!\r\n");
+total_ready++;
+}
+}
+}
+server_poll();
+usleep(50000);  /* 50ms */
+}
+
+printf("\nStarting game...\n");
+server_broadcast("\r\nStarting game!\r\n\r\n");
+sleep(1);
+} else {
+ttinit(); /* init tty */
+/* Show title screen with player colors */
+show_title();
+}
+
+rndini(); /* init random number generator */
+
+if (!restore_game()) /* try to restore previous game */
+{
+init_game(); /* otherwise init a new game */
+}
+
+/* Command loop starts here. */
+for (;;) { /* until user quits */
+/* Poll server for network events */
+if (is_server_mode()) {
+server_poll();
+}
+
+if (game.automove) { /* don't ask for cmd in auto mode */
 			/* Process all player turns in automove mode */
 			int players_processed = 0;
 			
@@ -84,30 +160,39 @@ void empire(void) {
 				}
 				continue; /* Continue to next iteration to check for keyboard input */
 			}
-		} else {
-			prompt(""); /* blank top line */
-			redisplay();
-			
-			/* Display whose turn it is */
-			if (game.player[game.current_player].alive) {
-				/* Check if current player is AI-controlled */
-				if (game.ai_mask & (1 << game.current_player)) {
-					comp_move(1); /* AI player uses computer logic */
-					/* Move to next player after AI turn */
-					game.current_player++;
-					if (game.current_player >= game.num_players) {
-						game.current_player = 0;
-						turn++;
-						if (turn % game.save_interval == 0) {
-							save_game();
-						}
-					}
-				} else {
-					prompt("%s's orders? ", game.player[game.current_player].name);
-					order = get_chx(); /* get a command */
-					do_command(order);
-				}
-			}
+} else {
+/* In server mode, skip ncurses display and send to network clients */
+if (is_server_mode()) {
+/* Display whose turn it is */
+if (game.player[game.current_player].alive) {
+/* Check if current player is AI-controlled */
+if (game.ai_mask & (1 << game.current_player)) {
+comp_move(1); /* AI player uses computer logic */
+} else {
+/* Send display to current player */
+view_map_t *player_map = MAP(CURRENT_PLAYER());
+server_send_display(game.current_player, player_map);
+/* Get command from network */
+order = get_chx();
+do_command(order);
+}
+}
+} else {
+prompt(""); /* blank top line */
+redisplay();
+
+/* Display whose turn it is */
+if (game.player[game.current_player].alive) {
+/* Check if current player is AI-controlled */
+if (game.ai_mask & (1 << game.current_player)) {
+comp_move(1); /* AI player uses computer logic */
+} else {
+prompt("%s's orders? ", game.player[game.current_player].name);
+order = get_chx(); /* get a command */
+do_command(order);
+}
+}
+}
 			
 			/* Check if game is over after each turn */
 			check_endgame();

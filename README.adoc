@@ -1,32 +1,44 @@
 = README for tnw (The New War)
 
-tnw is a hotseat multiplayer version of vms-empire, a simulation of full-scale
+tnw is a multiplayer version of vms-empire, a simulation of full-scale
 war between emperors. The object of the game is to conquer all enemies and
 become the sole ruler.
 
-This is a multiplayer 4X strategy game where each player takes turns controlling
-their forces on the same screen. Battle for territory, build armies and fleets,
-capture cities, and eliminate your opponents.
+This is a multiplayer 4X strategy game supporting both hotseat (local) and
+network play. Battle for territory, build armies and fleets, capture cities,
+and eliminate your opponents.
 
-== Multiplayer
+== Multiplayer Modes
 
-Run with 2-4 players:
-    ./tnw -p 2    # 2 players
-    ./tnw -p 3    # 3 players
-    ./tnw -p 4    # 4 players
+=== Hotseat Mode (Local)
+
+Run with 2-4 players on the same machine:
+./tnw -p 2 # 2 players
+./tnw -p 3 # 3 players
+./tnw -p 4 # 4 players
+
+Players take turns controlling their forces on the same screen.
+Press 'E' to end your turn and pass control to the next player.
+
+=== Network Server Mode
+
+Run as a server to allow remote players to connect:
+./tnw --server -p 4 # Server for 4 players
+./tnw --server --port 7777 -p 2 # Custom port
+
+The server will wait for all players to connect before starting the game.
+Players can connect using any TCP client (e.g., telnet or nc):
+telnet <server_ip> 6666
 
 Player Colors:
-    Player 1: Red Armies
-    Player 2: Yellow Armies
-    Player 3: Purple Armies
-    Player 4: White Armies
-
-Controls are the same as classic empire - take turns entering commands.
-Press 'E' to end your turn and pass control to the next player.
+Player 1: Red Armies
+Player 2: Yellow Armies
+Player 3: Purple Armies
+Player 4: White Armies
 
 == Building
 
-    make clean && make
+make clean && make
 
 Requires: ncurses
 

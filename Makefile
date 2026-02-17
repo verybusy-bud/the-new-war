@@ -23,43 +23,48 @@ LIBS = -lncurses
 CFLAGS = $(DEBUG) $(PROFILE) -Wall -Wno-format-security
 
 FILES = \
-	attack.c \
-	compmove.c \
-	data.c \
-	display.c \
-	edit.c \
-	empire.c \
-	game.c \
-	main.c \
-	map.c \
-	math.c \
-	object.c \
-	term.c \
-	usermove.c \
-	util.c
+attack.c \
+compmove.c \
+data.c \
+display.c \
+edit.c \
+empire.c \
+game.c \
+main.c \
+map.c \
+math.c \
+object.c \
+server.c \
+term.c \
+usermove.c \
+util.c
 
 HEADERS = empire.h extern.h
 
 OFILES = \
-	attack.o \
-	compmove.o \
-	data.o \
-	display.o \
-	edit.o \
-	empire.o \
-	game.o \
-	main.o \
-	map.o \
-	math.o \
-	object.o \
-	term.o \
-	usermove.o \
-	util.o
+attack.o \
+compmove.o \
+data.o \
+display.o \
+edit.o \
+empire.o \
+game.o \
+main.o \
+map.o \
+math.o \
+object.o \
+server.o \
+term.o \
+usermove.o \
+util.o
 
-all: tnw
+all: tnw door
 
 tnw: $(OFILES)
 	$(CC) $(PROFILE) -o tnw $(OFILES) $(LIBS)
+
+door: door.c
+	$(CC) -O2 -o door door.c
 
 attack.o:: extern.h empire.h
 compmove.o:: extern.h empire.h
@@ -73,6 +78,7 @@ map.o:: extern.h empire.h
 math.o:: extern.h empire.h
 object.o:: extern.h empire.h
 term.o:: extern.h empire.h
+server.o:: extern.h empire.h
 usermove.o:: extern.h empire.h
 util.o:: extern.h empire.h
 
@@ -114,10 +120,9 @@ uninstall:
 	rm -f /usr/share/appdata/vms-empire.xml
 
 clean:
-	rm -f *.o TAGS tnw
+	rm -f *.o TAGS tnw door
 	rm -f *.6 *.html
 	rm -f *.sav
-	make
 
 reflow:
 	@clang-format --style="{IndentWidth: 8, UseTab: ForIndentation}" -i $$(find . -name "*.[ch]")

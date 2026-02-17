@@ -209,3 +209,17 @@ char upper(char c);
 void tupper(char *str);
 void check(void);
 int loc_disp(int loc);
+
+/* server routines */
+void init_server(int port);
+int is_server_mode(void);
+int server_poll(void);
+int server_has_input(int player_id);
+char server_get_char(int player_id);
+void server_send_display(int player_id, view_map_t *vmap);
+void server_set_message(const char *fmt, ...);
+void server_shutdown(void);
+int server_all_players_connected(void);
+int server_num_connected(void);
+void server_wait_for_key(void);
+void server_broadcast(const char *msg);

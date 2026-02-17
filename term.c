@@ -34,6 +34,7 @@ to read the lines.  The new information is then displayed, and the
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "empire.h"
 #include "extern.h"
@@ -274,14 +275,29 @@ Input a character quietly.
 */
 
 char get_cq(void) {
-	char c;
+char c;
 
-	(void)crmode();
-	(void)refresh();
-	c = getch();
-	topini(); /* clear information lines */
-	(void)nocrmode();
-	return (c);
+/* In server mode, get input from network client */
+if (is_server_mode()) {
+    int current_player = game.current_player;
+    
+    /* Poll server and wait for input from current player */
+    while (!server_has_input(current_player)) {
+        server_poll();
+        usleep(10000);  /* 10ms */
+    }
+    
+    c = server_get_char(current_player);
+    topini(); /* clear information lines */
+    return (c);
+}
+
+(void)crmode();
+(void)refresh();
+c = getch();
+topini(); /* clear information lines */
+(void)nocrmode();
+return (c);
 }
 
 /*
