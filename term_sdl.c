@@ -157,21 +157,22 @@ void init_font_texture(void) {
     SDL_FreeSurface(font_surf);
 }
 
-void draw_char(int x, int y, char c) {
+void draw_char(int x, int y, char c, int scale) {
     if (!font_texture || c < 32 || c > 126) return;
     
     int col = (c - 32) % 16;
     int row = (c - 32) / 16;
     
     SDL_Rect src = {col * 8, row * 8, 5, 7};
-    SDL_Rect dst = {x, y, 5, 7};
+    SDL_Rect dst = {x, y, 5 * scale, 7 * scale};
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
     SDL_RenderCopy(renderer, font_texture, &src, &dst);
 }
 
 void draw_text(int x, int y, const char *str) {
+    int scale = 2;
     for (int i = 0; str[i]; i++) {
-        draw_char(x + i * 6, y, str[i]);
+        draw_char(x + i * 6 * scale, y, str[i], scale);
     }
 }
 
@@ -370,9 +371,9 @@ void draw_messages(void) {
     draw_rect(0, 0, SCREEN_WIDTH, 70, C_DARK_GRAY);
     draw_border(5, 5, SCREEN_WIDTH-10, 60, C_WHITE);
     
-    /* Draw message lines */
-    draw_text(10, 10, msg_line1);
-    draw_text(10, 25, msg_line2);
+    /* Draw message lines (14px tall font, 16px spacing) */
+    draw_text(10, 8, msg_line1);
+    draw_text(10, 24, msg_line2);
     draw_text(10, 40, msg_line3);
 }
 
