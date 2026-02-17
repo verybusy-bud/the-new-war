@@ -13,7 +13,7 @@
 
 #define SCREEN_WIDTH 1200
 #define SCREEN_HEIGHT 900
-#define TILE_SIZE 10
+#define TILE_SIZE 12
 #define MAP_OFFSET_X 10
 #define MAP_OFFSET_Y 50
 #define TEXT_LINE_HEIGHT 16
@@ -314,15 +314,24 @@ void comment(char *fmt, ...) {
     va_list ap;
     va_start(ap, fmt);
     
+    char buf[256];
+    vsnprintf(buf, sizeof(buf), fmt, ap);
+    fprintf(stderr, "%s\n", buf);
+    
     if (text_lines_used < MAX_TEXT_LINES) {
-        vsnprintf(text_buffer[text_lines_used], 255, fmt, ap);
+        size_t len = strlen(buf);
+        if (len > 254) len = 254;
+        memcpy(text_buffer[text_lines_used], buf, len);
+        text_buffer[text_lines_used][len] = '\0';
         text_lines_used++;
     } else {
-        /* Scroll up */
         for (int i = 0; i < MAX_TEXT_LINES-1; i++) {
             strcpy(text_buffer[i], text_buffer[i+1]);
         }
-        vsnprintf(text_buffer[MAX_TEXT_LINES-1], 255, fmt, ap);
+        size_t len = strlen(buf);
+        if (len > 254) len = 254;
+        memcpy(text_buffer[MAX_TEXT_LINES-1], buf, len);
+        text_buffer[MAX_TEXT_LINES-1][len] = '\0';
     }
     
     va_end(ap);
@@ -332,8 +341,15 @@ void extra(char *fmt, ...) {
     va_list ap;
     va_start(ap, fmt);
     
+    char buf[256];
+    vsnprintf(buf, sizeof(buf), fmt, ap);
+    fprintf(stderr, "%s\n", buf);
+    
     if (text_lines_used < MAX_TEXT_LINES) {
-        vsnprintf(text_buffer[text_lines_used], 255, fmt, ap);
+        size_t len = strlen(buf);
+        if (len > 254) len = 254;
+        memcpy(text_buffer[text_lines_used], buf, len);
+        text_buffer[text_lines_used][len] = '\0';
         text_lines_used++;
     }
     
@@ -346,6 +362,7 @@ void pos_str(int row, int col, char *str, ...) {
     
     char buf[256];
     vsnprintf(buf, sizeof(buf), str, ap);
+    fprintf(stderr, "%s\n", buf);
     
     if (text_lines_used < MAX_TEXT_LINES) {
         size_t len = strlen(buf);
