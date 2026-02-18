@@ -458,12 +458,27 @@ extern void empend(void);
 char get_chx(void) {
     SDL_Event e;
     
+    /* Make sure window has focus */
+    if (window) {
+        SDL_RaiseWindow(window);
+        SDL_SetWindowGrab(window, SDL_TRUE);
+    }
+    
+    fprintf(stderr, "get_chx: WAITING FOR KEY (click game window and press a key)\n"); fflush(stderr);
+    
     while (SDL_WaitEvent(&e)) {
+        /* Debug: print all events */
+        if (e.type != SDL_MOUSEMOTION && e.type != 512) {  /* Skip mouse motion spam */
+            fprintf(stderr, "get_chx: got event type %d\n", e.type); fflush(stderr);
+        }
+        
         if (e.type == SDL_QUIT) {
             empend();
             return 'q';
         } else if (e.type == SDL_KEYDOWN) {
             SDL_Keycode key = e.key.keysym.sym;
+            
+            fprintf(stderr, "get_chx: KEY PRESSED: %d (%c)\n", key, (key >= 32 && key < 127) ? key : '?'); fflush(stderr);
             
             switch(key) {
                 case SDLK_UP: case SDLK_KP_8: return '8';
@@ -486,6 +501,7 @@ char get_chx(void) {
             }
         }
     }
+    fprintf(stderr, "get_chx: SDL_WaitEvent returned 0!\n"); fflush(stderr);
     return -1;
 }
 
