@@ -33,11 +33,12 @@ pieces on the board.
 */
 
 void init_game(void) {
-	void make_map(void), place_cities(void);
+void make_map(void), place_cities(void);
 
-	count_t i;
-	
-	kill_display(); /* nothing on screen */
+count_t i;
+
+
+kill_display(); /* nothing on screen */
 	game.automove = false;
 	game.resigned = false;
 	game.debug = false;
@@ -76,41 +77,35 @@ game.user4_map[i].seen = 0;
 game.comp_map[i].contents = ' ';
 game.comp_map[i].seen = 0;
 }
-	for (i = 0; i < NUM_OBJECTS; i++) {
-		game.user_obj[i] = NULL;
-		game.comp_obj[i] = NULL;
-	}
-	game.free_list = NULL;            /* nothing free yet */
-	for (i = 0; i < LIST_SIZE; i++) { /* for each object */
-		piece_info_t *obj = &(game.object[i]);
-		obj->hits = 0; /* mark object as dead */
-		obj->owner = UNOWNED;
-		LINK(game.free_list, obj, piece_link);
-	}
+make_map(); /* make land and water */
 
-	make_map(); /* make land and water */
-
-		do {
+int city_attempts = 0;
+do {
+printf("DEBUG: City placement attempt %d\n", ++city_attempts);
 		for (i = 0; i < MAP_SIZE; i++) { /* remove cities */
 			if (game.real_map[i].contents == MAP_CITY) {
 				game.real_map[i].contents = MAP_LAND; /* land */
 			}
 		}
 		place_cities();     /* place cities on game.real_map */
-	} while (!select_cities()); /* choose a city for each player */
+} while (!select_cities()); /* choose a city for each player */
+printf("DEBUG: Cities placed successfully after %d attempts\n", city_attempts);
 
-	/* Reset to first player after city selection */
+/* Reset to first player after city selection */
 	game.current_player = 0;
 	
-	/* Remove fog of war - reveal entire map to all players */
-	for (i = 0; i < MAP_SIZE; i++) {
-		if (game.real_map[i].on_board) {
-			/* Scan for all human players */
-			scan(game.user_map, i);
-			/* Also scan for computer */
-			scan(game.comp_map, i);
-		}
-	}
+/* Remove fog of war - reveal entire map to all players */
+for (i = 0; i < MAP_SIZE; i++) {
+if (game.real_map[i].on_board) {
+/* Scan for all human players */
+scan(game.user_map, i);
+scan(game.user2_map, i);
+scan(game.user3_map, i);
+scan(game.user4_map, i);
+/* Also scan for computer */
+scan(game.comp_map, i);
+}
+}
 }
 
 /*
@@ -345,9 +340,18 @@ static int rank_tab[MAX_CONT];    /* indices to cont_tab in order of rank */
 static pair_t pair_tab[MAX_CONT * MAX_CONT]; /* ranked pairs of continents */
 
 bool select_cities(void) {
-	void find_cont(void), make_pair(void);
+void find_cont(void), make_pair(void);
 
-	int user_cont;
+
+find_cont();
+printf("DEBUG: find_cont done, ncont=%d\n", ncont);
+if (ncont == 0) {
+return (false);
+}
+make_pair();
+printf("DEBUG: About to assign cities to %d players\n", game.num_players);
+
+int user_cont;
 	int pair;
 		int i;
 
@@ -385,10 +389,12 @@ bool select_cities(void) {
 		}
 	}
 	
-	error("DEBUG: available_conts: %d %d %d %d", available_conts[0], available_conts[1], available_conts[2], available_conts[3]);
+	/* DEBUG: error() doesn't work in server mode - skip */
+/* error("DEBUG: available_conts: %d %d %d %d", available_conts[0], available_conts[1], available_conts[2], available_conts[3]); */
 	
-	/* Assign human players */
-	for (i = 0; i < game.num_players; i++) {
+/* Assign human players */
+for (i = 0; i < game.num_players; i++) {
+printf("DEBUG: Assigning player %d\n", i);
 		city_info_t *player_city = NULL;
 		int found = 0;
 		int cont_idx = 0;
@@ -482,16 +488,27 @@ bool select_cities(void) {
 		player_city->work = 0;
 		scan(game.user_map, player_city->loc);
 		
-		/* Set production for all players */
-		set_prod(player_city);
+/* Set production for all players */
+if (is_server_mode()) {
+/* In server mode, auto-set production to Army */
+player_city->prod = ARMY;
+player_city->work = -(piece_attr[ARMY].build_time / 5);
+} else {
+set_prod(player_city);
+}
 		
-		topmsg(1, "%s's city is at %d.", game.player[i].name, loc_disp(player_city->loc));
-		delay();
+/* Only show messages and delay in local mode, not server mode */
+if (!is_server_mode()) {
+topmsg(1, "%s's city is at %d.", game.player[i].name, loc_disp(player_city->loc));
+delay();
+}
 		
-		players_assigned++;
-	}
-	
-	return (true);
+players_assigned++;
+}
+
+printf("DEBUG: select_cities complete, assigned %d players\n", players_assigned);
+
+return (true);
 }
 
 /*
