@@ -77,19 +77,24 @@ game.user4_map[i].seen = 0;
 game.comp_map[i].contents = ' ';
 game.comp_map[i].seen = 0;
 }
+game.free_list = NULL; /* nothing free yet */
+for (i = 0; i < LIST_SIZE; i++) { /* for each object */
+piece_info_t *obj = &(game.object[i]);
+obj->hits = 0; /* mark object as dead */
+obj->owner = UNOWNED;
+LINK(game.free_list, obj, piece_link);
+}
+
 make_map(); /* make land and water */
 
-int city_attempts = 0;
 do {
-printf("DEBUG: City placement attempt %d\n", ++city_attempts);
-		for (i = 0; i < MAP_SIZE; i++) { /* remove cities */
-			if (game.real_map[i].contents == MAP_CITY) {
-				game.real_map[i].contents = MAP_LAND; /* land */
-			}
-		}
-		place_cities();     /* place cities on game.real_map */
+for (i = 0; i < MAP_SIZE; i++) { /* remove cities */
+if (game.real_map[i].contents == MAP_CITY) {
+game.real_map[i].contents = MAP_LAND; /* land */
+}
+}
+place_cities(); /* place cities on game.real_map */
 } while (!select_cities()); /* choose a city for each player */
-printf("DEBUG: Cities placed successfully after %d attempts\n", city_attempts);
 
 /* Reset to first player after city selection */
 	game.current_player = 0;
@@ -342,24 +347,15 @@ static pair_t pair_tab[MAX_CONT * MAX_CONT]; /* ranked pairs of continents */
 bool select_cities(void) {
 void find_cont(void), make_pair(void);
 
-
-find_cont();
-printf("DEBUG: find_cont done, ncont=%d\n", ncont);
-if (ncont == 0) {
-return (false);
-}
-make_pair();
-printf("DEBUG: About to assign cities to %d players\n", game.num_players);
-
 int user_cont;
-	int pair;
-		int i;
+int pair;
+int i;
 
-	find_cont(); /* find and rank the continents */
-	if (ncont == 0) {
-		return (false); /* there are no good continents */
-	}
-	make_pair(); /* create list of ranked pairs */
+find_cont(); /* find and rank the continents */
+if (ncont == 0) {
+return (false); /* there are no good continents */
+}
+make_pair(); /* create list of ranked pairs */
 
 	/* Assign cities to all human players */
 	int players_assigned = 0;
@@ -389,12 +385,8 @@ int user_cont;
 		}
 	}
 	
-	/* DEBUG: error() doesn't work in server mode - skip */
-/* error("DEBUG: available_conts: %d %d %d %d", available_conts[0], available_conts[1], available_conts[2], available_conts[3]); */
-	
 /* Assign human players */
 for (i = 0; i < game.num_players; i++) {
-printf("DEBUG: Assigning player %d\n", i);
 		city_info_t *player_city = NULL;
 		int found = 0;
 		int cont_idx = 0;
@@ -505,8 +497,6 @@ delay();
 		
 players_assigned++;
 }
-
-printf("DEBUG: select_cities complete, assigned %d players\n", players_assigned);
 
 return (true);
 }
