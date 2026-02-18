@@ -51,10 +51,12 @@ void user_move(void) {
 	}
 
 	/* produce new hardware */
-	fprintf(stderr, "user_move: starting city production loop\n"); fflush(stderr);
+	fprintf(stderr, "user_move: starting city production loop for owner %d (current_player=%d)\n", current_owner, game.current_player); fflush(stderr);
+	int city_count = 0;
 	for (i = 0; i < NUM_CITY; i++) {
 		if (game.city[i].owner == current_owner) {
-			fprintf(stderr, "user_move: processing city %d (loc %d)\n", i, game.city[i].loc); fflush(stderr);
+			city_count++;
+			fprintf(stderr, "user_move: processing city %d (loc %ld, owner=%d) with prod=%d\n", i, game.city[i].loc, game.city[i].owner, game.city[i].prod); fflush(stderr);
 			scan(game.user_map, game.city[i].loc);
 			prod = game.city[i].prod;
 
@@ -83,6 +85,7 @@ void user_move(void) {
 			}
 		}
 	}
+	fprintf(stderr, "user_move: found %d cities for owner %d\n", city_count, current_owner); fflush(stderr);
 
 	fprintf(stderr, "user_move: done with cities, moving satellites\n"); fflush(stderr);
 	
