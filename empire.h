@@ -169,7 +169,7 @@ Macros to link and unlink an object from a doubly linked list.
 	}
 
 /* macros to set map and list of an object */
-#define MAP(owner) (((owner) == USER || (owner) == USER2 || (owner) == USER3 || (owner) == USER4) ? game.user_map : game.comp_map)
+#define MAP(owner) ((owner) == USER ? game.user_map : (owner) == USER2 ? game.user2_map : (owner) == USER3 ? game.user3_map : (owner) == USER4 ? game.user4_map : game.comp_map)
 #define LIST(owner) (((owner) == USER || (owner) == USER2 || (owner) == USER3 || (owner) == USER4) ? game.user_obj : game.comp_obj)
 #define IS_HUMAN(owner) ((owner) >= USER && (owner) <= USER4)
 #define CURRENT_PLAYER() (game.current_player == 0 ? USER : game.current_player == 1 ? USER2 : game.current_player == 2 ? USER3 : game.current_player == 3 ? USER4 : USER)
@@ -320,8 +320,11 @@ typedef struct {
 
 	/* the world */
 	real_map_t real_map[MAP_SIZE]; /* the way the world really looks */
-	view_map_t comp_map[MAP_SIZE]; /* computer's view of the world */
-	view_map_t user_map[MAP_SIZE]; /* user's view of the world */
+view_map_t comp_map[MAP_SIZE]; /* computer's view of the world */
+view_map_t user_map[MAP_SIZE]; /* player 1's view of the world */
+view_map_t user2_map[MAP_SIZE]; /* player 2's view of the world */
+view_map_t user3_map[MAP_SIZE]; /* player 3's view of the world */
+view_map_t user4_map[MAP_SIZE]; /* player 4's view of the world */
 	city_info_t city[NUM_CITY];    /* city information */
 
 	/* miscellaneous */

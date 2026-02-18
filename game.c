@@ -64,12 +64,18 @@ void init_game(void) {
 		}
 	}
 
-	for (i = 0; i < MAP_SIZE; i++) {
-		game.user_map[i].contents = ' '; /* nothing seen yet */
-		game.user_map[i].seen = 0;
-		game.comp_map[i].contents = ' ';
-		game.comp_map[i].seen = 0;
-	}
+for (i = 0; i < MAP_SIZE; i++) {
+game.user_map[i].contents = ' '; /* nothing seen yet */
+game.user_map[i].seen = 0;
+game.user2_map[i].contents = ' ';
+game.user2_map[i].seen = 0;
+game.user3_map[i].contents = ' ';
+game.user3_map[i].seen = 0;
+game.user4_map[i].contents = ' ';
+game.user4_map[i].seen = 0;
+game.comp_map[i].contents = ' ';
+game.comp_map[i].seen = 0;
+}
 	for (i = 0; i < NUM_OBJECTS; i++) {
 		game.user_obj[i] = NULL;
 		game.comp_obj[i] = NULL;
