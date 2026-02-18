@@ -91,11 +91,13 @@ void init_game(void) {
 		}
 		place_cities();     /* place cities on game.real_map */
 	} while (!select_cities()); /* choose a city for each player */
+	fprintf(stderr, "init_game: select_cities() returned, resetting to player 0\n"); fflush(stderr);
 
 	/* Reset to first player after city selection */
 	game.current_player = 0;
 	
 	/* Remove fog of war - reveal entire map to all players */
+	fprintf(stderr, "init_game: Removing fog of war (this may take a moment)...\n"); fflush(stderr);
 	for (i = 0; i < MAP_SIZE; i++) {
 		if (game.real_map[i].on_board) {
 			/* Scan for all human players */
@@ -103,7 +105,11 @@ void init_game(void) {
 			/* Also scan for computer */
 			scan(game.comp_map, i);
 		}
+		if (i % 1000 == 0) {
+			fprintf(stderr, "init_game: Scanned %d/%d locations...\n", i, MAP_SIZE); fflush(stderr);
+		}
 	}
+	fprintf(stderr, "init_game: Fog of war removed, initialization complete\n"); fflush(stderr);
 }
 
 /*
@@ -578,11 +584,14 @@ bool select_cities(void) {
 		player_city->work = 0;
 		
 		topmsg(1, "%s's city is at %d.", game.player[i].name, loc_disp(player_city->loc));
+		fprintf(stderr, "select_cities: Assigned %s to city at %d, calling delay()\n", game.player[i].name, loc_disp(player_city->loc)); fflush(stderr);
 		delay();
+		fprintf(stderr, "select_cities: delay() returned\n"); fflush(stderr);
 		
 		players_assigned++;
 	}
 	
+	fprintf(stderr, "select_cities: Returning true (assigned %d players)\n", players_assigned); fflush(stderr);
 	return (true);
 }
 
