@@ -549,10 +549,18 @@ void help(char **text, int nlines) {
 }
 
 void redisplay(void) {
+    static int last_render = 0;
+    int now = SDL_GetTicks();
+    if (now - last_render < 33) return;  /* Limit to 30fps max */
+    last_render = now;
     sdl_render();
 }
 
 void redraw(void) {
+    static int last_render = 0;
+    int now = SDL_GetTicks();
+    if (now - last_render < 33) return;
+    last_render = now;
     sdl_render();
 }
 
@@ -621,11 +629,19 @@ void print_sector(int whose, view_map_t vmap[], int sector) {
 
 void display_loc(int whose, view_map_t vmap[], loc_t loc) {
     /* SDL version: just redraw the map */
+    static int last_render = 0;
+    int now = SDL_GetTicks();
+    if (now - last_render < 50) return;  /* Limit to 20fps max */
+    last_render = now;
     sdl_render();
 }
 
 void display_locx(int whose, view_map_t vmap[], loc_t loc) {
     /* SDL version: just redraw the map */
+    static int last_render = 0;
+    int now = SDL_GetTicks();
+    if (now - last_render < 50) return;
+    last_render = now;
     sdl_render();
 }
 
