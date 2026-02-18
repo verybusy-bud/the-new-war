@@ -467,13 +467,9 @@ bool select_cities(void) {
 			best_city->work = 0;
 			scan(game.user_map, best_city->loc);
 			
-			if (!game.sim_mode) {
-				best_city->prod = NOPIECE;
-				set_prod(best_city);
-			} else {
-				best_city->prod = ARMY;
-				best_city->work = 0;
-			}
+		/* Auto-set production to ARMY for all cities */
+		best_city->prod = ARMY;
+		best_city->work = 0;
 				
 				topmsg(1, "%s's city is at %d.", game.player[i].name, loc_disp(best_city->loc));
 				delay();
@@ -577,14 +573,9 @@ bool select_cities(void) {
 		player_city->work = 0;
 		scan(game.user_map, player_city->loc);
 		
-		/* Set production for all players - skip if in sim mode */
-		if (!game.sim_mode) {
-			set_prod(player_city);
-		} else {
-			/* Default to ARMY in sim mode */
-			player_city->prod = ARMY;
-			player_city->work = 0;
-		}
+		/* Auto-set production to ARMY for all cities */
+		player_city->prod = ARMY;
+		player_city->work = 0;
 		
 		topmsg(1, "%s's city is at %d.", game.player[i].name, loc_disp(player_city->loc));
 		delay();

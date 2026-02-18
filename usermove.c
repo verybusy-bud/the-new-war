@@ -53,22 +53,28 @@ void user_move(void) {
 	/* produce new hardware */
 	fprintf(stderr, "user_move: starting city production loop for owner %d (current_player=%d)\n", current_owner, game.current_player); fflush(stderr);
 	int city_count = 0;
+	int loop_count = 0;
 	for (i = 0; i < NUM_CITY; i++) {
+		loop_count++;
+		if (loop_count > NUM_CITY * 2) {
+			fprintf(stderr, "user_move: INFINITE LOOP DETECTED! Breaking...\n"); fflush(stderr);
+			break;
+		}
 		if (game.city[i].owner == current_owner) {
 			city_count++;
-			fprintf(stderr, "user_move: processing city %d (loc %ld, owner=%d) with prod=%d\n", i, game.city[i].loc, game.city[i].owner, game.city[i].prod); fflush(stderr);
+			fprintf(stderr, "user_move: processing city %d (loc %ld, owner=%d) with prod=%d [loop %d]\n", i, game.city[i].loc, game.city[i].owner, game.city[i].prod, loop_count); fflush(stderr);
+			if (city_count > 100) {
+				fprintf(stderr, "user_move: Too many cities! Breaking...\n"); fflush(stderr);
+				break;
+			}
 			scan(game.user_map, game.city[i].loc);
 			prod = game.city[i].prod;
 
 			if (prod == NOPIECE) {
-				if (game.sim_mode) {
-					game.city[i].prod = ARMY;
-					game.city[i].work = 0;
-				} else {
-					fprintf(stderr, "user_move: calling set_prod for city %d\n", i); fflush(stderr);
-					set_prod(&(game.city[i]));
-					fprintf(stderr, "user_move: set_prod returned for city %d\n", i); fflush(stderr);
-				}
+				/* Auto-produce ARMY for all cities to avoid user having to press keys for each */
+				game.city[i].prod = ARMY;
+				game.city[i].work = 0;
+				comment("City at %d will produce ARMY", loc_disp(game.city[i].loc));
 			} else if (game.city[i].work++ >=
 			           (long)piece_attr[prod].build_time) {
 				/* kermyt begin */
