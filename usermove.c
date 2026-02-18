@@ -51,8 +51,10 @@ void user_move(void) {
 	}
 
 	/* produce new hardware */
+	fprintf(stderr, "user_move: starting city production loop\n"); fflush(stderr);
 	for (i = 0; i < NUM_CITY; i++) {
 		if (game.city[i].owner == current_owner) {
+			fprintf(stderr, "user_move: processing city %d (loc %d)\n", i, game.city[i].loc); fflush(stderr);
 			scan(game.user_map, game.city[i].loc);
 			prod = game.city[i].prod;
 
@@ -61,7 +63,9 @@ void user_move(void) {
 					game.city[i].prod = ARMY;
 					game.city[i].work = 0;
 				} else {
+					fprintf(stderr, "user_move: calling set_prod for city %d\n", i); fflush(stderr);
 					set_prod(&(game.city[i]));
+					fprintf(stderr, "user_move: set_prod returned for city %d\n", i); fflush(stderr);
 				}
 			} else if (game.city[i].work++ >=
 			           (long)piece_attr[prod].build_time) {
@@ -80,6 +84,8 @@ void user_move(void) {
 		}
 	}
 
+	fprintf(stderr, "user_move: done with cities, moving satellites\n"); fflush(stderr);
+	
 	/* move all satellites */
 	for (obj = game.user_obj[SATELLITE]; obj != NULL; obj = next_obj) {
 		next_obj = obj->piece_link.next;
@@ -87,15 +93,20 @@ void user_move(void) {
 			move_sat(obj);
 		}
 	}
+	
+	fprintf(stderr, "user_move: done with satellites\n"); fflush(stderr);
 
 	sec_start = cur_sector(); /* get currently displayed sector */
 	if (sec_start == -1) {
 		sec_start = 0;
 	}
 
+	fprintf(stderr, "user_move: starting sector loop (sec_start=%d, NUM_SECTORS=%d)\n", sec_start, NUM_SECTORS); fflush(stderr);
+	
 	/* loop through sectors, moving every piece in the sector */
 	for (i = sec_start; i < sec_start + NUM_SECTORS; i++) {
 		int sec = i % NUM_SECTORS;
+		fprintf(stderr, "user_move: processing sector %d\n", sec); fflush(stderr);
 		sector_change(); /* allow screen to be redrawn */
 
 		for (j = 0; j < NUM_OBJECTS; j++) { /* loop through obj lists */
@@ -106,9 +117,11 @@ void user_move(void) {
 				if (!obj->moved && obj->owner == current_owner) { /* object not moved yet? */
 					if (loc_sector(obj->loc) ==
 					    sec) { /* object in sector? */
+						fprintf(stderr, "user_move: calling piece_move for obj type %d at loc %ld\n", obj->type, obj->loc); fflush(stderr);
 						piece_move(
 						    obj); /* yup; move the
 						             object */
+						fprintf(stderr, "user_move: piece_move returned\n"); fflush(stderr);
 					}
 				}
 			}
@@ -118,6 +131,7 @@ void user_move(void) {
 			redisplay();         /* show it to the user */
 		}
 	}
+	fprintf(stderr, "user_move: sector loop done\n"); fflush(stderr);
 	if (game.save_movie) {
 		save_movie_screen();
 	}

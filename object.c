@@ -664,6 +664,8 @@ asking until we get a valid answer.
 void set_prod(city_info_t *cityp) {
 	ASSERT(cityp != NULL);
 
+	fprintf(stderr, "set_prod: starting for city at %d\n", loc_disp(cityp->loc)); fflush(stderr);
+
 	// cppcheck-suppress nullPointerRedundantCheck
 	scan(game.user_map, cityp->loc);
 	// cppcheck-suppress nullPointerRedundantCheck
@@ -676,7 +678,9 @@ void set_prod(city_info_t *cityp) {
 		       // cppcheck-suppress nullPointerRedundantCheck
 		       loc_disp(cityp->loc));
 
+		fprintf(stderr, "set_prod: waiting for input\n"); fflush(stderr);
 		i = get_piece_name();
+		fprintf(stderr, "set_prod: got piece type %d\n", i); fflush(stderr);
 
 		if (i == NOPIECE)
 			error("I don't know how to build those.");
@@ -684,6 +688,7 @@ void set_prod(city_info_t *cityp) {
 		else {
 			cityp->prod = i;
 			cityp->work = -(piece_attr[i].build_time / 5);
+			fprintf(stderr, "set_prod: done, returning\n"); fflush(stderr);
 			return;
 		}
 	}

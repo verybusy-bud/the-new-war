@@ -118,6 +118,8 @@ void draw_border(int x, int y, int w, int h, Uint8 r, Uint8 g, Uint8 b) {
 }
 
 void sdl_init(void) {
+    if (sdl_initialized) return;  /* Already initialized */
+    
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         fprintf(stderr, "SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
         return;

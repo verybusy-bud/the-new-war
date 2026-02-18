@@ -37,33 +37,12 @@ Color get_player_color(int owner) {
 }
 
 void init_sdl_display(void) {
-    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-        fprintf(stderr, "SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
-        return;
-    }
-    
-    window = SDL_CreateWindow("Empire - The New War", 
-                              SDL_WINDOWPOS_UNDEFINED, 
-                              SDL_WINDOWPOS_UNDEFINED,
-                              SCREEN_WIDTH, 
-                              SCREEN_HEIGHT, 
-                              SDL_WINDOW_SHOWN);
-    
-    if (window == NULL) return;
-    
-    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-    if (renderer == NULL) return;
-    
-    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
-    sdl_initialized = true;
-    printf("SDL2 Display initialized!\n");
+    /* SDL is already initialized in term_sdl.c */
+    /* This function exists for compatibility but does nothing */
 }
 
 void close_sdl_display(void) {
-    if (renderer) SDL_DestroyRenderer(renderer);
-    if (window) SDL_DestroyWindow(window);
-    SDL_Quit();
-    sdl_initialized = false;
+    /* SDL is closed in term_sdl.c */
 }
 
 void sdl_clear_screen(void) {

@@ -123,9 +123,6 @@ compmove_sdl.o: compmove.c extern.h empire.h
 data_sdl.o: data.c empire.h
 	$(CC) $(SDL_CFLAGS) -DUSE_SDL -c -o $@ data.c
 
-display_sdl.o: display_sdl.c extern.h empire.h
-	$(CC) $(SDL_CFLAGS) -c -o $@ display_sdl.c
-
 edit_sdl.o: edit.c extern.h empire.h
 	$(CC) $(SDL_CFLAGS) -DUSE_SDL -c -o $@ edit.c
 
