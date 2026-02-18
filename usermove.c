@@ -113,6 +113,18 @@ void user_move(void) {
 	fprintf(stderr, "user_move: starting sector loop (sec_start=%d, NUM_SECTORS=%d)\n", sec_start, NUM_SECTORS); fflush(stderr);
 	
 	/* loop through sectors, moving every piece in the sector */
+	fprintf(stderr, "user_move: Checking for objects to move...\n"); fflush(stderr);
+	int total_objs = 0;
+	for (j = 0; j < NUM_OBJECTS; j++) {
+		int cnt = 0;
+		for (obj = game.user_obj[j]; obj != NULL; obj = obj->piece_link.next) {
+			if (obj->owner == current_owner) cnt++;
+		}
+		if (cnt > 0) fprintf(stderr, "user_move: Object type %d: %d owned by current player\n", j, cnt);
+		total_objs += cnt;
+	}
+	fprintf(stderr, "user_move: Total objects to move: %d\n", total_objs); fflush(stderr);
+	
 	for (i = sec_start; i < sec_start + NUM_SECTORS; i++) {
 		int sec = i % NUM_SECTORS;
 		fprintf(stderr, "user_move: processing sector %d\n", sec); fflush(stderr);
@@ -678,7 +690,9 @@ void ask_user(piece_info_t *obj) {
 		display_score();         /* show current score */
 		display_loc_u(obj->loc); /* reposition cursor */
 
+		fprintf(stderr, "ask_user: Waiting for movement key (Q/W/E/A/D/Z/X/C/S/J/V/L/K/H/B/T/R/Y/?)...\n"); fflush(stderr);
 		c = get_chx(); /* get command from user (no echo) */
+		fprintf(stderr, "ask_user: Got key '%c' (%d)\n", c, c); fflush(stderr);
 		switch (c) {
 		case 'Q':
 			user_dir(obj, NORTHWEST);

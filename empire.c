@@ -48,6 +48,8 @@ void empire(void) {
 	if (!restore_game()) /* try to restore previous game */ {
 		init_game(); /* otherwise init a new game */
 	}
+	
+	fprintf(stderr, "EMPIRE: Game initialized, starting command loop (automove=%d)\n", game.automove); fflush(stderr);
 
 	/* Restore automove state after init_game may have reset it */
 	if (game.sim_mode) {
@@ -55,6 +57,7 @@ void empire(void) {
 	}
 
 	/* Command loop starts here. */
+	fprintf(stderr, "EMPIRE: Entering main command loop\n"); fflush(stderr);
 	for (;;) {                   /* until user quits */
 		if (game.automove) { /* don't ask for cmd in auto mode */
 			/* Process all player turns in automove mode */
@@ -454,13 +457,15 @@ void show_title(void) {
 	pos_str(16, 0, "There are %d Generals joining us today", game.num_players);
 	pos_str(17, 0, "");
 	
-	if (!game.automove) {
+	redisplay();
+	/* Skip title screen wait - start immediately */
+	/* if (!game.automove) {
 		pos_str(18, 0, "Press any key to continue...");
 		redisplay();
-		get_chx(); /* wait for keypress */
+		get_chx();
 	} else {
 		redisplay();
-	}
+	} */
 }
 
 /* end */
