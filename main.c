@@ -30,6 +30,7 @@ Default is 0000 (all human).
 
 --server: Run as network server (clients connect remotely)
 --port PORT: Server port (default 6666)
+--host: Start server and connect as first player
 --spectate: Allow spectators to watch the game
 */
 
@@ -39,6 +40,8 @@ Default is 0000 (all human).
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 #define OPTFLAGS "w:s:d:S:f:p:a:"
 #define SERVER_PORT 6666
@@ -53,9 +56,11 @@ int wflg, sflg, dflg, Sflg, pflg;
 int aflg = 0; /* AI mask - default no AI players */
 int land;
 int server_mode = 0;
+int host_mode = 0;
 int server_port = SERVER_PORT;
 int new_argc = 0;
 char **new_argv;
+pid_t host_pid = 0;
 
 wflg = 70; /* set defaults */
 sflg = 5;
@@ -65,13 +70,15 @@ pflg = 2; /* default to 2 players for hotseat */
 game.savefile = "empire.sav";
 game.ai_mask = 0; /* default: all human players */
 
-/* Filter out --server and --port options, getopt doesn't handle long options */
+/* Filter out --server, --host and --port options, getopt doesn't handle long options */
 new_argv = malloc((argc + 1) * sizeof(char *));
 new_argv[new_argc++] = argv[0]; /* program name */
 
 for (int i = 1; i < argc; i++) {
 if (strcmp(argv[i], "--server") == 0) {
 server_mode = 1;
+} else if (strcmp(argv[i], "--host") == 0) {
+host_mode = 1;
 } else if (strcmp(argv[i], "--port") == 0 && i + 1 < argc) {
 server_port = atoi(argv[i + 1]);
 i++;
@@ -203,11 +210,52 @@ fflush(stdout);
 init_server(server_port);
 }
 
+/* Host mode: fork server and connect as client */
+if (host_mode) {
+host_pid = fork();
+if (host_pid < 0) {
+perror("fork");
+exit(1);
+} else if (host_pid == 0) {
+/* Child: become the server */
+printf("Starting server on port %d...\n", server_port);
+fflush(stdout);
+init_server(server_port);
+printf("Server started. Waiting for players...\n");
+fflush(stdout);
+/* Wait for players to connect */
+while (!server_all_players_connected()) {
+server_poll();
+usleep(100000); /* 100ms */
+}
+printf("All players connected. Server running...\n");
+fflush(stdout);
+/* Server runs in background - just keep polling */
+while (1) {
+server_poll();
+usleep(10000); /* 10ms */
+}
+exit(0);
+} else {
+/* Parent: wait for server to start, then become client */
+sleep(1); /* Give server time to start */
+printf("Connecting to localhost:%d as Player 1...\n", server_port);
+fflush(stdout);
+/* Set stdin/stdout to use socket via door-like mechanism */
+/* For now, just run the normal game which will connect via modified term.c */
+}
+}
+
 empire(); /* call main routine */
 
 /* Shutdown server if in server mode */
 if (server_mode) {
 server_shutdown();
+}
+
+/* In host mode, wait for child server to finish */
+if (host_mode && host_pid > 0) {
+waitpid(host_pid, NULL, WNOHANG);
 }
 
 free(new_argv);
