@@ -160,13 +160,19 @@ void piece_move(piece_info_t *obj) {
 		int saved_moves = obj->moved; /* save moves made */
 		loc_t saved_loc = obj->loc;   /* remember starting location */
 
-		if (awake(obj) || need_input) { /* need user input? */
-			ask_user(obj);
-			topini();                /* clear info lines */
-			display_loc_u(obj->loc); /* let user see result */
-			(void)redisplay();
-			need_input = false; /* we got it */
-		}
+if (awake(obj) || need_input) { /* need user input? */
+/* In server mode, auto-move instead of asking user */
+if (is_server_mode()) {
+/* Set function to explore for auto-movement */
+obj->func = EXPLORE;
+} else {
+ask_user(obj);
+topini(); /* clear info lines */
+display_loc_u(obj->loc); /* let user see result */
+(void)redisplay();
+need_input = false; /* we got it */
+}
+}
 
 		if (obj->moved == saved_moves) { /* user set function? */
 			switch (obj->func) { /* handle preprogrammed function */
