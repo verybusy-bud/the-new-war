@@ -1578,3 +1578,5 @@ a marine has been completed at city 4338.
 Your city at 4418 is under attack.
 City at 4433 has been subjugated!
 Your army has been dispersed to enforce control.
+an army has been completed at city 2004.
+an army has been completed at city 2152.

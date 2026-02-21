@@ -325,17 +325,23 @@ static void handle_client_output(int client_idx) {
         return;
     }
 
-    n = send(clients[client_idx].socket,
-             clients[client_idx].output_buffer + clients[client_idx].output_pos,
-             remaining, 0);
+/* Check if socket is still valid before sending */
+if (clients[client_idx].socket < 0) {
+disconnect_client(client_idx);
+return;
+}
 
-    if (n < 0) {
-        if (errno != EAGAIN && errno != EWOULDBLOCK) {
-            perror("send");
-            disconnect_client(client_idx);
-        }
-        return;
-    }
+n = send(clients[client_idx].socket,
+clients[client_idx].output_buffer + clients[client_idx].output_pos,
+remaining, 0);
+
+if (n < 0) {
+if (errno != EAGAIN && errno != EWOULDBLOCK) {
+/* Silently disconnect on error - don't spam console */
+disconnect_client(client_idx);
+}
+return;
+}
 
     clients[client_idx].output_pos += n;
 

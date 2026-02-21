@@ -1,6 +1,7 @@
 # Build artifacts
 *.o
 tnw
+door
 *.sav
 
 # Generated files

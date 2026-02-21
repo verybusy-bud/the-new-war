@@ -52,7 +52,7 @@ printf("\n\nAll players connected!\n");
 
 /* Send title screen to all clients */
 server_broadcast("\r\n");
-server_broadcast("THE NEW WAR, Version 1.1\r\n");
+server_broadcast("THE NEW WAR, Version 1.3\r\n");
 server_broadcast("Detailed directions are on the empire manual page\r\n\r\n");
 server_broadcast("General 1: Red Forces\r\n");
 server_broadcast("General 2: Yellow Forces\r\n");
@@ -513,7 +513,7 @@ void c_movie(void) {
 void show_title(void) {
 	kill_display();
 	
-	pos_str(7, 0, "THE NEW WAR, Version 1.1 site Benjamin Klosterman 14-Feb-2026");
+	pos_str(7, 0, "THE NEW WAR, Version 1.3 site Benjamin Klosterman 14-Feb-2026");
 	pos_str(8, 0, "Detailed directions are on the empire manual page\n");
 	pos_str(9, 0, "");
 	
