@@ -14,19 +14,47 @@ The New War now supports multiplayer via TCP sockets. For LBBS integration, we p
 
 ## Setup
 
-### 1. Start the Game Server
+### Option 1: Automatic Host Mode (Recommended)
 
-Run the game server first:
+Use `tnw-host` script which starts the server and connects the first player:
 
 ```bash
-# For 2 players on port 7777
-./tnw -p2 --server --port 7777
+# Interactive - will prompt for number of players
+exec /home/mainuser/codev/github/the-new-war/tnw-host
 
-# For 4 players on port 7777
+# Or specify players directly
+exec /home/mainuser/codev/github/the-new-war/tnw-host -p 2 --port 7777
+```
+
+When launched from BBS without `-p`, the script will display:
+```
+========================================
+THE NEW WAR - Multiplayer Empire
+========================================
+
+How many players? (2-4) [2]:
+```
+
+The user can enter 2, 3, or 4 players.
+
+### Option 2: Manual Server + Door
+
+Start server separately, then connect players:
+
+```bash
+# Terminal 1: Start server for 4 players on port 7777
 ./tnw -p4 --server --port 7777
 
-# Custom port
-./tnw -p3 --server --port 8888
+# Players connect via:
+./door localhost 7777
+```
+
+### Option 3: Environment Variables
+
+```bash
+export TNW_HOST=localhost
+export TNW_PORT=7777
+exec /home/mainuser/codev/github/the-new-war/door
 ```
 
 ### 2. Configure LBBS Door
