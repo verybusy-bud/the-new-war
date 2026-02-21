@@ -161,17 +161,13 @@ void piece_move(piece_info_t *obj) {
 		loc_t saved_loc = obj->loc;   /* remember starting location */
 
 if (awake(obj) || need_input) { /* need user input? */
-/* In server mode, auto-move instead of asking user */
-if (is_server_mode()) {
-/* Set function to explore for auto-movement */
-obj->func = EXPLORE;
-} else {
 ask_user(obj);
+if (!is_server_mode()) {
 topini(); /* clear info lines */
 display_loc_u(obj->loc); /* let user see result */
 (void)redisplay();
-need_input = false; /* we got it */
 }
+need_input = false; /* we got it */
 }
 
 		if (obj->moved == saved_moves) { /* user set function? */
@@ -628,15 +624,17 @@ void ask_user(piece_info_t *obj) {
 	void user_build(piece_info_t *), user_transport(piece_info_t *);
 	void user_armyattack(piece_info_t *), user_repair(piece_info_t *);
 
-	for (;;) {
-		char c;
+for (;;) {
+char c;
 
-		display_loc_u(obj->loc); /* display piece to move */
-		describe_obj(obj);       /* describe object to be moved */
-		display_score();         /* show current score */
-		display_loc_u(obj->loc); /* reposition cursor */
+if (!is_server_mode()) {
+display_loc_u(obj->loc); /* display piece to move */
+describe_obj(obj); /* describe object to be moved */
+display_score(); /* show current score */
+display_loc_u(obj->loc); /* reposition cursor */
+}
 
-		c = get_chx(); /* get command from user (no echo) */
+c = get_chx(); /* get command from user (no echo) */
 		switch (c) {
 		case 'Q':
 			user_dir(obj, NORTHWEST);
