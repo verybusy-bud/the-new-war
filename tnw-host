@@ -12,9 +12,15 @@ PORT=7777
 # Parse arguments
 while [[ $# -gt 0 ]]; do
     case $1 in
-        -p)
-            PLAYERS="$2"
-            shift 2
+        -p*)
+            # Handle -p2 or -p 2
+            if [[ "$1" == "-p" ]]; then
+                PLAYERS="$2"
+                shift 2
+            else
+                PLAYERS="${1#-p}"
+                shift
+            fi
             ;;
         --port)
             PORT="$2"
@@ -50,6 +56,11 @@ if [[ -z "$PLAYERS" ]]; then
 fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Kill any existing server on this port
+pkill -f "tnw.*--port $PORT" 2>/dev/null
+pkill -f "tnw.*--port.*$PORT" 2>/dev/null
+sleep 1
 
 # Check if server is already running
 if nc -z localhost "$PORT" 2>/dev/null; then
