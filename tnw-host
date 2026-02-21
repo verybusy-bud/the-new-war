@@ -33,7 +33,7 @@ if [[ -z "$PLAYERS" ]]; then
     echo "THE NEW WAR - Multiplayer Empire"
     echo "========================================"
     echo ""
-    echo "How many players? (2-4) [2]: "
+    echo -n "How many players? (2-4) [2]: "
     
     # Read from stdin (user's terminal via BBS)
     read -r player_input
@@ -66,9 +66,9 @@ SERVER_PID=$!
 # Wait for server to start
 for i in {1..20}; do
     if nc -z localhost "$PORT" 2>/dev/null; then
-        # Port is open, but server needs time to initialize player slots
-        sleep 2
+        # Server port is open, but need time to initialize
         echo "Server ready!"
+        sleep 2
         break
     fi
     sleep 0.5
