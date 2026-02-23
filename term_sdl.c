@@ -28,8 +28,18 @@ static bool sdl_initialized = false;
 /* BMP surfaces for units and terrain */
 static SDL_Surface *bmp_land = NULL;
 static SDL_Surface *bmp_sea = NULL;
-static SDL_Surface *bmp_city = NULL;
-static SDL_Surface *bmp_units[6] = {NULL};
+static SDL_Surface *bmp_city[7] = {NULL};  /* city1-city6 for players 1-6 */
+static SDL_Surface *bmp_army[7] = {NULL};  /* a1-a6 for armies */
+static SDL_Surface *bmp_fighter[7] = {NULL};  /* f1-f6 for fighters */
+static SDL_Surface *bmp_battleship[7] = {NULL};  /* b1-b6 for battleships */
+static SDL_Surface *bmp_destroyer[7] = {NULL};  /* d1-d6 for destroyers */
+static SDL_Surface *bmp_submarine[7] = {NULL};  /* s1-s6 for submarines */
+static SDL_Surface *bmp_transport[7] = {NULL};  /* t1-t6 for transports */
+static SDL_Surface *bmp_carrier[7] = {NULL};  /* c1-c6 for carriers */
+static SDL_Surface *bmp_marine[7] = {NULL};  /* use army sprites for now */
+static SDL_Surface *bmp_bomber[7] = {NULL};  /* use fighter sprites for now */
+static SDL_Surface *bmp_satellite[7] = {NULL};  /* use city sprites for now */
+static SDL_Surface *bmp_patrol[7] = {NULL};  /* use destroyer sprites for now */
 static SDL_Surface *bmp_unknown = NULL;
 
 /* TTF font */
@@ -143,15 +153,73 @@ void sdl_init(void) {
     /* Load BMP images */
     bmp_land = SDL_LoadBMP("land.bmp");
     bmp_sea = SDL_LoadBMP("sea.bmp");
-    bmp_city = SDL_LoadBMP("city.bmp");
     bmp_unknown = SDL_LoadBMP("unknown.bmp");
     
-    /* Load unit BMPs */
-    bmp_units[1] = SDL_LoadBMP("a1.bmp");
-    bmp_units[2] = SDL_LoadBMP("a2.bmp");
-    bmp_units[3] = SDL_LoadBMP("a3.bmp");
-    bmp_units[4] = SDL_LoadBMP("a4.bmp");
-    bmp_units[5] = SDL_LoadBMP("a5.bmp");
+    /* Load city BMPs for each player (1-6) */
+    bmp_city[1] = SDL_LoadBMP("city1.bmp");
+    bmp_city[2] = SDL_LoadBMP("city2.bmp");
+    bmp_city[3] = SDL_LoadBMP("city3.bmp");
+    bmp_city[4] = SDL_LoadBMP("city4.bmp");
+    bmp_city[5] = SDL_LoadBMP("city5.bmp");
+    bmp_city[6] = SDL_LoadBMP("city6.bmp");
+    
+    /* Load unit BMPs for each player (1-6) */
+    bmp_army[1] = SDL_LoadBMP("a1.bmp");
+    bmp_army[2] = SDL_LoadBMP("a2.bmp");
+    bmp_army[3] = SDL_LoadBMP("a3.bmp");
+    bmp_army[4] = SDL_LoadBMP("a4.bmp");
+    bmp_army[5] = SDL_LoadBMP("a5.bmp");
+    bmp_army[6] = SDL_LoadBMP("a6.bmp");
+    
+    bmp_fighter[1] = SDL_LoadBMP("f1.bmp");
+    bmp_fighter[2] = SDL_LoadBMP("f2.bmp");
+    bmp_fighter[3] = SDL_LoadBMP("f3.bmp");
+    bmp_fighter[4] = SDL_LoadBMP("f4.bmp");
+    bmp_fighter[5] = SDL_LoadBMP("f5.bmp");
+    bmp_fighter[6] = SDL_LoadBMP("f6.bmp");
+    
+    bmp_battleship[1] = SDL_LoadBMP("b1.bmp");
+    bmp_battleship[2] = SDL_LoadBMP("b2.bmp");
+    bmp_battleship[3] = SDL_LoadBMP("b3.bmp");
+    bmp_battleship[4] = SDL_LoadBMP("b4.bmp");
+    bmp_battleship[5] = SDL_LoadBMP("b5.bmp");
+    bmp_battleship[6] = SDL_LoadBMP("b6.bmp");
+    
+    bmp_destroyer[1] = SDL_LoadBMP("d1.bmp");
+    bmp_destroyer[2] = SDL_LoadBMP("d2.bmp");
+    bmp_destroyer[3] = SDL_LoadBMP("d3.bmp");
+    bmp_destroyer[4] = SDL_LoadBMP("d4.bmp");
+    bmp_destroyer[5] = SDL_LoadBMP("d5.bmp");
+    bmp_destroyer[6] = SDL_LoadBMP("d6.bmp");
+    
+    bmp_submarine[1] = SDL_LoadBMP("s1.bmp");
+    bmp_submarine[2] = SDL_LoadBMP("s2.bmp");
+    bmp_submarine[3] = SDL_LoadBMP("s3.bmp");
+    bmp_submarine[4] = SDL_LoadBMP("s4.bmp");
+    bmp_submarine[5] = SDL_LoadBMP("s5.bmp");
+    bmp_submarine[6] = SDL_LoadBMP("s6.bmp");
+    
+    bmp_transport[1] = SDL_LoadBMP("t1.bmp");
+    bmp_transport[2] = SDL_LoadBMP("t2.bmp");
+    bmp_transport[3] = SDL_LoadBMP("t3.bmp");
+    bmp_transport[4] = SDL_LoadBMP("t4.bmp");
+    bmp_transport[5] = SDL_LoadBMP("t5.bmp");
+    bmp_transport[6] = SDL_LoadBMP("t6.bmp");
+    
+    bmp_carrier[1] = SDL_LoadBMP("c1.bmp");
+    bmp_carrier[2] = SDL_LoadBMP("c2.bmp");
+    bmp_carrier[3] = SDL_LoadBMP("c3.bmp");
+    bmp_carrier[4] = SDL_LoadBMP("c4.bmp");
+    bmp_carrier[5] = SDL_LoadBMP("c5.bmp");
+    bmp_carrier[6] = SDL_LoadBMP("c6.bmp");
+    
+    /* Use fallback sprites for units without specific sprites */
+    for (int i = 1; i <= 6; i++) {
+        bmp_marine[i] = bmp_army[i];  /* Marines use army sprites */
+        bmp_bomber[i] = bmp_fighter[i];  /* Bombers use fighter sprites */
+        bmp_satellite[i] = bmp_city[i];  /* Satellites use city sprites for now */
+        bmp_patrol[i] = bmp_destroyer[i];  /* Patrol boats use destroyer sprites */
+    }
     
     /* Initialize font texture */
     init_font();
@@ -175,11 +243,15 @@ void sdl_present(void) {
     SDL_RenderPresent(renderer);
 }
 
-void draw_tile(int screen_x, int screen_y, char contents, int owner, int seen) {
+void draw_tile(int screen_x, int screen_y, char contents, int owner, int seen, int piece_type) {
     if (!sdl_initialized) return;
     
     SDL_Rect dst = {screen_x, screen_y, TILE_SIZE, TILE_SIZE};
     SDL_Texture *tex = NULL;
+    SDL_Surface **bmp_array = NULL;
+    
+    /* Map owner (1-5) to sprite index (1-6). Owner 5 (COMP) uses index 6. */
+    int sprite_idx = (owner >= 1 && owner <= 4) ? owner : (owner == 5 ? 6 : 0);
     
     /* Try to use BMP, fall back to colors */
     if (!seen) {
@@ -205,20 +277,39 @@ void draw_tile(int screen_x, int screen_y, char contents, int owner, int seen) {
     }
     
     /* Draw unit/city on top */
-    if (owner > 0 && owner <= 5) {
-        if (owner <= 4 && bmp_city) {
-            SDL_Texture *city_tex = SDL_CreateTextureFromSurface(renderer, bmp_city);
-            if (city_tex) {
-                SDL_RenderCopy(renderer, city_tex, NULL, &dst);
-                SDL_DestroyTexture(city_tex);
+    if (owner > 0 && owner <= 5 && sprite_idx > 0) {
+        /* Check if it's a city or a unit */
+        if (contents == '*' || contents == 'X' || contents == 'O') {
+            /* It's a city - use city sprite */
+            if (bmp_city[sprite_idx]) {
+                tex = SDL_CreateTextureFromSurface(renderer, bmp_city[sprite_idx]);
             }
-        } else if (bmp_units[owner]) {
-            SDL_Texture *unit_tex = SDL_CreateTextureFromSurface(renderer, bmp_units[owner]);
-            if (unit_tex) {
-                SDL_RenderCopy(renderer, unit_tex, NULL, &dst);
-                SDL_DestroyTexture(unit_tex);
+        } else if (piece_type >= 0 && piece_type < NUM_OBJECTS) {
+            /* It's a unit - use appropriate sprite based on type */
+            switch (piece_type) {
+                case ARMY: bmp_array = bmp_army; break;
+                case MARINE: bmp_array = bmp_marine; break;
+                case FIGHTER: bmp_array = bmp_fighter; break;
+                case BOMBER: bmp_array = bmp_bomber; break;
+                case PATROL: bmp_array = bmp_patrol; break;
+                case DESTROYER: bmp_array = bmp_destroyer; break;
+                case SUBMARINE: bmp_array = bmp_submarine; break;
+                case TRANSPORT: bmp_array = bmp_transport; break;
+                case CARRIER: bmp_array = bmp_carrier; break;
+                case BATTLESHIP: bmp_array = bmp_battleship; break;
+                case SATELLITE: bmp_array = bmp_satellite; break;
+                default: bmp_array = NULL; break;
             }
+            if (bmp_array && bmp_array[sprite_idx]) {
+                tex = SDL_CreateTextureFromSurface(renderer, bmp_array[sprite_idx]);
+            }
+        }
+        
+        if (tex) {
+            SDL_RenderCopy(renderer, tex, NULL, &dst);
+            SDL_DestroyTexture(tex);
         } else {
+            /* Fallback to colored square if no sprite */
             Color c = get_player_color(owner);
             int padding = 3;
             draw_rect(screen_x + padding, screen_y + padding, 
@@ -240,16 +331,20 @@ void draw_map(void) {
             char contents = game.user_map[loc].contents;
             int owner = 0;
             int seen = game.user_map[loc].seen;
+            int piece_type = -1;
             
             if (game.real_map[loc].cityp) {
                 owner = game.real_map[loc].cityp->owner;
             } else {
                 piece_info_t *p = find_obj_at_loc(loc);
-                if (p) owner = p->owner;
+                if (p) {
+                    owner = p->owner;
+                    piece_type = p->type;
+                }
             }
             
             draw_tile(MAP_OFFSET_X + x * TILE_SIZE, MAP_OFFSET_Y + y * TILE_SIZE, 
-                     contents, owner, seen);
+                     contents, owner, seen, piece_type);
         }
     }
 }

@@ -97,16 +97,14 @@ void init_game(void) {
 	game.current_player = 0;
 	
 	/* Remove fog of war - reveal entire map to all players */
-	fprintf(stderr, "init_game: Removing fog of war (this may take a moment)...\n"); fflush(stderr);
+	fprintf(stderr, "init_game: Removing fog of war...\n"); fflush(stderr);
+	game.date = 1; /* Set date to 1 so scanned locations are marked as seen */
 	for (i = 0; i < MAP_SIZE; i++) {
 		if (game.real_map[i].on_board) {
 			/* Scan for all human players */
 			scan(game.user_map, i);
 			/* Also scan for computer */
 			scan(game.comp_map, i);
-		}
-		if (i % 1000 == 0) {
-			fprintf(stderr, "init_game: Scanned %d/%d locations...\n", i, MAP_SIZE); fflush(stderr);
 		}
 	}
 	fprintf(stderr, "init_game: Fog of war removed, initialization complete\n"); fflush(stderr);
