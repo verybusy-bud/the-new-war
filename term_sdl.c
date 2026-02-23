@@ -150,18 +150,28 @@ void sdl_init(void) {
     memset(text_buffer, 0, sizeof(text_buffer));
     text_lines_used = 0;
     
-    /* Load BMP images */
+    /* Load BMP images with error checking */
     bmp_land = SDL_LoadBMP("land.bmp");
+    if (!bmp_land) fprintf(stderr, "Failed to load land.bmp: %s\n", SDL_GetError());
+    
     bmp_sea = SDL_LoadBMP("sea.bmp");
+    if (!bmp_sea) fprintf(stderr, "Failed to load sea.bmp: %s\n", SDL_GetError());
+    
     bmp_unknown = SDL_LoadBMP("unknown.bmp");
+    if (!bmp_unknown) fprintf(stderr, "Failed to load unknown.bmp: %s\n", SDL_GetError());
     
     /* Load city BMPs for each player (1-6) */
-    bmp_city[1] = SDL_LoadBMP("city1.bmp");
-    bmp_city[2] = SDL_LoadBMP("city2.bmp");
-    bmp_city[3] = SDL_LoadBMP("city3.bmp");
-    bmp_city[4] = SDL_LoadBMP("city4.bmp");
-    bmp_city[5] = SDL_LoadBMP("city5.bmp");
-    bmp_city[6] = SDL_LoadBMP("city6.bmp");
+    fprintf(stderr, "Loading city BMPs...\n");
+    for (int i = 1; i <= 6; i++) {
+        char filename[32];
+        snprintf(filename, sizeof(filename), "city%d.bmp", i);
+        bmp_city[i] = SDL_LoadBMP(filename);
+        if (!bmp_city[i]) {
+            fprintf(stderr, "Failed to load %s: %s\n", filename, SDL_GetError());
+        } else {
+            fprintf(stderr, "Loaded %s: %dx%d\n", filename, bmp_city[i]->w, bmp_city[i]->h);
+        }
+    }
     
     /* Load unit BMPs for each player (1-6) */
     bmp_army[1] = SDL_LoadBMP("a1.bmp");
@@ -284,8 +294,16 @@ void draw_tile(int screen_x, int screen_y, char contents, int owner, int seen, i
         if (city_sprite == 0) city_sprite = 6; /* Unowned cities use sprite 6 (neutral/white) */
         if (bmp_city[city_sprite]) {
             tex = SDL_CreateTextureFromSurface(renderer, bmp_city[city_sprite]);
-            SDL_RenderCopy(renderer, tex, NULL, &dst);
-            SDL_DestroyTexture(tex);
+            if (tex) {
+                SDL_RenderCopy(renderer, tex, NULL, &dst);
+                SDL_DestroyTexture(tex);
+            } else {
+                fprintf(stderr, "draw_tile: Failed to create texture for city sprite %d: %s\n", city_sprite, SDL_GetError());
+            }
+        } else {
+            /* Fallback: draw colored square for city */
+            Color c = get_player_color(owner > 0 ? owner : 6);
+            draw_rect(screen_x + 2, screen_y + 2, TILE_SIZE - 4, TILE_SIZE - 4, c.r, c.g, c.b);
         }
     }
     /* Draw units */
