@@ -277,32 +277,36 @@ void draw_tile(int screen_x, int screen_y, char contents, int owner, int seen, i
     }
     
     /* Draw unit/city on top */
-    if (owner > 0 && owner <= 5 && sprite_idx > 0) {
-        /* Check if it's a city or a unit */
-        if (contents == '*' || contents == 'X' || contents == 'O') {
-            /* It's a city - use city sprite */
-            if (bmp_city[sprite_idx]) {
-                tex = SDL_CreateTextureFromSurface(renderer, bmp_city[sprite_idx]);
-            }
-        } else if (piece_type >= 0 && piece_type < NUM_OBJECTS) {
-            /* It's a unit - use appropriate sprite based on type */
-            switch (piece_type) {
-                case ARMY: bmp_array = bmp_army; break;
-                case MARINE: bmp_array = bmp_marine; break;
-                case FIGHTER: bmp_array = bmp_fighter; break;
-                case BOMBER: bmp_array = bmp_bomber; break;
-                case PATROL: bmp_array = bmp_patrol; break;
-                case DESTROYER: bmp_array = bmp_destroyer; break;
-                case SUBMARINE: bmp_array = bmp_submarine; break;
-                case TRANSPORT: bmp_array = bmp_transport; break;
-                case CARRIER: bmp_array = bmp_carrier; break;
-                case BATTLESHIP: bmp_array = bmp_battleship; break;
-                case SATELLITE: bmp_array = bmp_satellite; break;
-                default: bmp_array = NULL; break;
-            }
-            if (bmp_array && bmp_array[sprite_idx]) {
-                tex = SDL_CreateTextureFromSurface(renderer, bmp_array[sprite_idx]);
-            }
+    /* Draw cities (including unowned ones) */
+    if (contents == '*' || contents == 'X' || contents == 'O' || contents == '0') {
+        /* It's a city - use city sprite based on owner */
+        int city_sprite = sprite_idx;
+        if (city_sprite == 0) city_sprite = 6; /* Unowned cities use sprite 6 (neutral/white) */
+        if (bmp_city[city_sprite]) {
+            tex = SDL_CreateTextureFromSurface(renderer, bmp_city[city_sprite]);
+            SDL_RenderCopy(renderer, tex, NULL, &dst);
+            SDL_DestroyTexture(tex);
+        }
+    }
+    /* Draw units */
+    else if (owner > 0 && owner <= 5 && sprite_idx > 0 && piece_type >= 0 && piece_type < NUM_OBJECTS) {
+        /* It's a unit - use appropriate sprite based on type */
+        switch (piece_type) {
+            case ARMY: bmp_array = bmp_army; break;
+            case MARINE: bmp_array = bmp_marine; break;
+            case FIGHTER: bmp_array = bmp_fighter; break;
+            case BOMBER: bmp_array = bmp_bomber; break;
+            case PATROL: bmp_array = bmp_patrol; break;
+            case DESTROYER: bmp_array = bmp_destroyer; break;
+            case SUBMARINE: bmp_array = bmp_submarine; break;
+            case TRANSPORT: bmp_array = bmp_transport; break;
+            case CARRIER: bmp_array = bmp_carrier; break;
+            case BATTLESHIP: bmp_array = bmp_battleship; break;
+            case SATELLITE: bmp_array = bmp_satellite; break;
+            default: bmp_array = NULL; break;
+        }
+        if (bmp_array && bmp_array[sprite_idx]) {
+            tex = SDL_CreateTextureFromSurface(renderer, bmp_array[sprite_idx]);
         }
         
         if (tex) {
