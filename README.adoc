@@ -42,6 +42,48 @@ make clean && make
 
 Requires: ncurses
 
+== Multi-User Server Architecture (New)
+
+This codebase now includes a three-tier architecture for multi-user gameplay
+similar to Wolfpack Empire:
+
+=== Architecture Components
+
+1. **empire_frontend** - Telnet frontend accepting connections on port 5000
+2. **empire_server** - Authoritative game server (port 4000 or Unix socket)
+3. **empire_client** - Per-session terminal client
+
+=== Quick Start
+
+```bash
+# Build all components
+make clean && make
+
+# Setup directories and user (run as root)
+sudo ./setup.sh
+
+# Install binaries
+sudo cp empire_server empire_frontend /usr/local/bin/
+
+# Start services manually
+./empire_server -d
+./empire_frontend -d
+
+# Connect with telnet
+telnet localhost 5000
+```
+
+=== Systemd Deployment
+
+```bash
+# Install service files
+sudo cp empire-server.service empire-frontend.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now empire-server empire-frontend
+```
+
+See ARCHITECTURE.md for complete documentation.
+
 == Original Empire
 
 This code originated under VMS by Chuck Simmons <chuck@amdahl.com>. Since

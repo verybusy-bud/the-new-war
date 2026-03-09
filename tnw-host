@@ -57,17 +57,32 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Kill any existing server on this port
+# Check if server is already running BEFORE killing anything
+if nc -z localhost "$PORT" 2>/dev/null; then
+    echo "A game is already running on port $PORT."
+    echo -n "Join existing game? [Y/n]: "
+    read -r answer
+
+    case "$answer" in
+        ""|Y|y)
+            echo "Connecting to existing game..."
+            exec "$SCRIPT_DIR/door" localhost "$PORT"
+            ;;
+        N|n)
+            echo "Not joining existing game. Starting a NEW game on port $PORT..."
+            # fall through to kill and start a fresh server
+            ;;
+        *)
+            echo "Unrecognized response. Defaulting to join."
+            exec "$SCRIPT_DIR/door" localhost "$PORT"
+            ;;
+    esac
+fi
+
+# Kill any existing server on this port (for "new game" case or stale processes)
 pkill -f "tnw.*--port $PORT" 2>/dev/null
 pkill -f "tnw.*--port.*$PORT" 2>/dev/null
 sleep 1
-
-# Check if server is already running
-if nc -z localhost "$PORT" 2>/dev/null; then
-    echo "Server already running on port $PORT"
-    echo "Connecting as player..."
-    exec "$SCRIPT_DIR/door" localhost "$PORT"
-fi
 
 # Start server in background
 echo "Starting The New War server on port $PORT for $PLAYERS players..."

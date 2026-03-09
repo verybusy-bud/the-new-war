@@ -1,0 +1,26 @@
+[Unit]
+Description=Empire Game Server
+After=network.target
+
+[Service]
+Type=simple
+User=empire
+Group=empire
+ExecStart=/usr/local/bin/empire_server -d -s /var/run/empire/server.sock
+ExecStop=/bin/kill -TERM $MAINPID
+Restart=always
+RestartSec=5
+KillMode=mixed
+
+# Security
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/var/lib/empire /var/log/empire /var/run/empire
+NoNewPrivileges=yes
+
+# Resource limits
+LimitNOFILE=4096
+
+[Install]
+WantedBy=multi-user.target

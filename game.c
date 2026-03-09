@@ -85,16 +85,26 @@ obj->owner = UNOWNED;
 LINK(game.free_list, obj, piece_link);
 }
 
-make_map(); /* make land and water */
+    make_map(); /* make land and water */
 
-do {
-for (i = 0; i < MAP_SIZE; i++) { /* remove cities */
-if (game.real_map[i].contents == MAP_CITY) {
-game.real_map[i].contents = MAP_LAND; /* land */
-}
-}
-place_cities(); /* place cities on game.real_map */
-} while (!select_cities()); /* choose a city for each player */
+    int init_attempts = 0;
+    do {
+        fprintf(stderr, "DEBUG: init_game attempt %d\n", init_attempts);
+        for (i = 0; i < MAP_SIZE; i++) { /* remove cities */
+            if (game.real_map[i].contents == MAP_CITY) {
+                game.real_map[i].contents = MAP_LAND; /* land */
+            }
+        }
+        fprintf(stderr, "DEBUG: placing cities...\n");
+        place_cities(); /* place cities on game.real_map */
+        fprintf(stderr, "DEBUG: selecting cities...\n");
+        init_attempts++;
+        if (init_attempts > 100) {
+            fprintf(stderr, "Failed to initialize game after 100 attempts\n");
+            exit(1);
+        }
+    } while (!select_cities()); /* choose a city for each player */
+    fprintf(stderr, "DEBUG: init_game complete after %d attempts\n", init_attempts);
 
 /* Reset to first player after city selection */
 	game.current_player = 0;

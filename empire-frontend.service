@@ -1,0 +1,27 @@
+[Unit]
+Description=Empire Telnet Frontend
+After=network.target empire-server.service
+Requires=empire-server.service
+
+[Service]
+Type=simple
+User=empire
+Group=empire
+ExecStart=/usr/local/bin/empire_frontend -d -p 5000 -s /var/run/empire/server.sock
+ExecStop=/bin/kill -TERM $MAINPID
+Restart=always
+RestartSec=5
+KillMode=mixed
+
+# Security
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/var/log/empire
+NoNewPrivileges=yes
+
+# Resource limits
+LimitNOFILE=4096
+
+[Install]
+WantedBy=multi-user.target

@@ -58,13 +58,26 @@ term.o \
 usermove.o \
 util.o
 
-all: tnw door
+all: tnw door empire_server empire_frontend empire_client
 
 tnw: $(OFILES)
 	$(CC) $(PROFILE) -o tnw $(OFILES) $(LIBS)
 
 door: door.c
 	$(CC) -O2 -o door door.c
+
+# New multi-user server binaries
+# Note: empire_server.c has its own main(), so exclude main.c
+SERVER_FILES = attack.c compmove.c data.c display.c edit.c empire.c game.c map.c math.c object.c server.c term.c usermove.c util.c
+
+empire_server: empire_server.c $(SERVER_FILES) $(HEADERS)
+	$(CC) $(DEBUG) -o empire_server empire_server.c $(SERVER_FILES) $(LIBS)
+
+empire_frontend: empire_frontend.c
+	$(CC) -O2 -o empire_frontend empire_frontend.c
+
+empire_client: empire_client.c
+	$(CC) -O2 -o empire_client empire_client.c
 
 attack.o:: extern.h empire.h
 compmove.o:: extern.h empire.h
@@ -120,15 +133,16 @@ uninstall:
 	rm -f /usr/share/appdata/vms-empire.xml
 
 clean:
-	rm -f *.o TAGS tnw door
+	rm -f *.o TAGS tnw door empire_server empire_frontend empire_client
 	rm -f *.6 *.html
-	rm -f *.sav
+	rm -f *.sav empire_server.log
 
 reflow:
 	@clang-format --style="{IndentWidth: 8, UseTab: ForIndentation}" -i $$(find . -name "*.[ch]")
 
 clobber: clean
 	rm -f vms-empire vms-empire-*.tar*
+	rm -f empire_server empire_frontend empire_client
 
 SOURCES = README.adoc HACKING NEWS control empire.6 vms-empire.xml COPYING Makefile BUGS AUTHORS $(FILES) $(HEADERS) vms-empire.png vms-empire.desktop
 

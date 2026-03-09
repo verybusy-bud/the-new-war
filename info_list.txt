@@ -1580,3 +1580,5 @@ City at 4433 has been subjugated!
 Your army has been dispersed to enforce control.
 an army has been completed at city 2004.
 an army has been completed at city 2152.
+an army has been completed at city 3308.
+an army has been completed at city 2856.
