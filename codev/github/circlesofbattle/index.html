@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Circles of Battle</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="game-container">
+        <header>
+            <h1>Circles of Battle</h1>
+            <p class="subtitle">WeGo Simultaneous Turn Strategy</p>
+        </header>
+        
+        <div class="game-info">
+            <div class="player-info">
+                <div class="player allied" id="allied-indicator">
+                    <span class="player-circle"></span>
+                    <div class="player-details">
+                        <span>Allied Forces</span>
+                        <span class="player-desc">Defending South</span>
+                    </div>
+                </div>
+                <div class="player axis" id="axis-indicator">
+                    <span class="player-circle"></span>
+                    <div class="player-details">
+                        <span>Axis Forces</span>
+                        <span class="player-desc">Attacking North</span>
+                    </div>
+                </div>
+            </div>
+            <div class="status" id="game-status">Allied Planning Phase - Turn 1</div>
+            <button class="btn" onclick="game.resetGame()">New Game</button>
+        </div>
+        
+        <div class="phase-panel">
+            <div class="phase-info">
+                <span class="phase-indicator planning">PLANNING PHASE</span>
+                <span class="phase-help">Give orders to your units, then click "Execute Turn"</span>
+            </div>
+            <button class="btn execute-btn" id="execute-btn" onclick="game.executeTurn()">Execute Turn</button>
+        </div>
+        
+        <div class="orders-panel" id="orders-panel">
+            <div class="orders-title">Orders (Select a unit first)</div>
+            <div class="order-buttons">
+                <button class="order-btn" onclick="game.startOrder('move')" title="Draw a path for the unit to follow">
+                    <span class="order-icon">→</span>
+                    <span class="order-name">Move</span>
+                    <span class="order-desc">Draw path to move</span>
+                </button>
+                <button class="order-btn" onclick="game.startOrder('seek')" title="Unit will charge the nearest enemy">
+                    <span class="order-icon">◎</span>
+                    <span class="order-name">Seek</span>
+                    <span class="order-desc">Charge nearest enemy</span>
+                </button>
+                <button class="order-btn" onclick="game.startOrder('shoot')" title="Select target to shoot at">
+                    <span class="order-icon">⌖</span>
+                    <span class="order-name">Shoot</span>
+                    <span class="order-desc">Fire at target</span>
+                </button>
+                <button class="order-btn" onclick="game.startOrder('fireAdvance')" title="Move forward while shooting">
+                    <span class="order-icon">↗</span>
+                    <span class="order-name">Fire & Advance</span>
+                    <span class="order-desc">Move and shoot (Infantry only)</span>
+                </button>
+                <button class="order-btn fallback" onclick="game.startOrder('fallback')" title="Retreat while firing">
+                    <span class="order-icon">↘</span>
+                    <span class="order-name">Fallback</span>
+                    <span class="order-desc">Retreat while firing</span>
+                </button>
+            </div>
+            <div class="orders-help">
+                <span class="help-text">Right-click to cancel order • Click unit to select • Draw path by clicking cells</span>
+            </div>
+        </div>
+        
+        <div class="pending-orders" id="pending-orders">
+            <div class="pending-title">Pending Orders</div>
+            <div class="pending-list" id="pending-list"></div>
+        </div>
+        
+        <div class="battlefield" id="battlefield"></div>
+        
+        <div class="legend">
+            <div class="legend-section">
+                <div class="legend-title">Unit Types</div>
+                <div class="legend-items">
+                    <div class="legend-item">
+                        <span class="legend-symbol">LI</span>
+                        <span>Line Infantry - Solid all-around unit</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-symbol">GI</span>
+                        <span>Guard Infantry - Elite, high organization</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-symbol">HU</span>
+                        <span>Hussars - Fast cavalry, hit & run</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-symbol">CU</span>
+                        <span>Cuirassiers - Heavy cavalry, strong charge</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-symbol">FA</span>
+                        <span>Foot Artillery - Powerful but immobile</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-symbol">HA</span>
+                        <span>Horse Artillery - Mobile artillery</span>
+                    </div>
+                </div>
+            </div>
+            <div class="legend-section">
+                <div class="legend-title">Objectives</div>
+                <div class="legend-items">
+                    <div class="legend-item">
+                        <span class="legend-symbol objective-base">★</span>
+                        <span>Base - Capture enemy base to win</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-symbol objective-neutral">⚑</span>
+                        <span>Neutral - Worth 10 VP when captured</span>
+                    </div>
+                </div>
+            </div>
+            <div class="legend-section">
+                <div class="legend-title">Mechanics</div>
+                <div class="legend-items">
+                    <div class="legend-item">
+                        <span class="legend-symbol">↗</span>
+                        <span>Unit facing - Determines front arc</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-symbol">━━</span>
+                        <span>Green bar = Organization (morale)</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-symbol">━━</span>
+                        <span>Charge = Bonus based on distance</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="instructions">
+            <h3>WeGo Simultaneous Turns</h3>
+            <ul>
+                <li><strong>Planning Phase:</strong> Both players secretly give orders to their units</li>
+                <li><strong>Orders:</strong> Select a unit, choose order type, then define the action</li>
+                <li><strong>Move:</strong> Click multiple cells to draw a path - unit will follow it</li>
+                <li><strong>Seek:</strong> Unit automatically finds and charges nearest enemy</li>
+                <li><strong>Shoot:</strong> Select target - unit fires if in range and arc</li>
+                <li><strong>Fire & Advance:</strong> Infantry moves 25% slower but fires while moving</li>
+                <li><strong>Fallback:</strong> Retreat 30% slower, face away, fire at pursuers</li>
+                <li><strong>Execution:</strong> Click "Execute Turn" - both sides act simultaneously!</li>
+                <li><strong>Win:</strong> Capture enemy base or control most objectives</li>
+            </ul>
+        </div>
+    </div>
+    
+    <script src="game.js"></script>
+</body>
+</html>
